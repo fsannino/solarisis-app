@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth-helpers";
 
 import { archiveProduct, updateProduct } from "../_actions";
 import { ProductForm } from "../_form";
+import { VariantsSection } from "./_variants-section";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -44,7 +45,7 @@ export default async function EditProductPage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       <header className="border-line flex items-end justify-between border-b pb-6">
         <div>
           <Link href="/admin/produtos" className="text-ink-soft hover:text-ink text-xs">
@@ -65,7 +66,7 @@ export default async function EditProductPage({ params }: PageProps) {
         ) : null}
       </header>
 
-      <div className="mt-8">
+      <div className="mt-8 max-w-2xl">
         <ProductForm
           action={update}
           submitLabel="Salvar"
@@ -85,6 +86,8 @@ export default async function EditProductPage({ params }: PageProps) {
           }}
         />
       </div>
+
+      <VariantsSection productId={product.id} />
     </div>
   );
 }
