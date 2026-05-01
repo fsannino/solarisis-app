@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
+import { auth } from "@/auth/admin";
 
 const PUBLIC_ADMIN_PATHS = new Set(["/admin/login"]);
 

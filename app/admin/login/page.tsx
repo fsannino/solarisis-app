@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { auth, signIn } from "@/auth";
+import { auth, signIn } from "@/auth/admin";
 
 type SearchParams = Promise<{ from?: string; error?: string }>;
 
