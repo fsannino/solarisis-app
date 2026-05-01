@@ -16,8 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      # Stub para o prisma validate/generate. Não toca no banco real.
+      # Stubs para o prisma validate/generate. Não tocam no banco real.
+      # As URLs reais vêm do Vercel (Neon Marketplace) em runtime.
       DATABASE_URL: postgresql://stub:stub@localhost:5432/stub
+      DATABASE_URL_UNPOOLED: postgresql://stub:stub@localhost:5432/stub
 
     steps:
       - uses: actions/checkout@v4
