@@ -6,31 +6,19 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 
+import { adminAuthConfig } from "./admin.config";
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1)
 });
 
+// Auth.js completo do admin: importa o config Edge-safe e adiciona
+// PrismaAdapter + Credentials.authorize com bcrypt (Node-only).
+// O middleware (proxy.ts) usa apenas adminAuthConfig — não isso aqui.
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...adminAuthConfig,
   adapter: PrismaAdapter(prisma),
-  // Credentials provider exige strategy=jwt.
-  session: { strategy: "jwt" },
-  basePath: "/admin/api/auth",
-  // Cookie próprio para não colidir com a sessão do Customer (mesmo domínio).
-  cookies: {
-    sessionToken: {
-      name: "solarisis.admin.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production"
-      }
-    }
-  },
-  pages: {
-    signIn: "/admin/login"
-  },
   providers: [
     Credentials({
       credentials: {
@@ -69,21 +57,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       }
     })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-      }
-      return session;
-    }
-  }
+  ]
 });
