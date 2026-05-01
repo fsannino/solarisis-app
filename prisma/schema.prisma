@@ -99,7 +99,9 @@ enum UserStatus {
 model Customer {
   id             String          @id @default(cuid())
   email          String          @unique
+  emailVerified  DateTime?
   name           String
+  image          String?
   phone          String?
   cpf            String?         @unique
   passwordHash   String?

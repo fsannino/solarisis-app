@@ -13,10 +13,21 @@ const credentialsSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  // Credentials provider exige strategy=jwt — sessões em DB ficam
-  // disponíveis para Customer (PR #7, com Google provider).
+  // Credentials provider exige strategy=jwt.
   session: { strategy: "jwt" },
   basePath: "/admin/api/auth",
+  // Cookie próprio para não colidir com a sessão do Customer (mesmo domínio).
+  cookies: {
+    sessionToken: {
+      name: "solarisis.admin.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production"
+      }
+    }
+  },
   pages: {
     signIn: "/admin/login"
   },
