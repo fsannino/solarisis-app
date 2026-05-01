@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --orange: #FF7A00;
+  --orange-soft: #FFE8D2;
+  --bg: #FAF7F2;
+  --surface: #FFFFFF;
+  --line: #E8DFD0;
+  --line-strong: #D4C7B0;
+  --ink: #1A1614;
+  --ink-soft: #6B5F54;
+  --ink-faint: #A89B8A;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
