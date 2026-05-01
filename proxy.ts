@@ -1,6 +1,11 @@
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth/admin";
+import { adminAuthConfig } from "@/auth/admin.config";
+
+// Instância "leve" do Auth.js só pra validar JWT no Edge.
+// NÃO importa Prisma — o handler completo (auth/admin.ts) é separado.
+const { auth } = NextAuth(adminAuthConfig);
 
 const PUBLIC_ADMIN_PATHS = new Set(["/admin/login"]);
 
