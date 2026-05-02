@@ -6,12 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // Pooled (PgBouncer) — usado pela aplicação em runtime.
-  url       = env("DATABASE_URL")
-  // Direto — usado pelo Prisma para migrations e introspection.
-  // No Neon, o Vercel injeta como DATABASE_URL_UNPOOLED.
-  directUrl = env("DATABASE_URL_UNPOOLED")
+  provider = "postgresql"
+  // Pooled, com pgbouncer=true e connect_timeout=15 já no querystring.
+  // Recomendado pelo Neon para Prisma em ambiente serverless (Vercel).
+  // O Neon Vercel Marketplace injeta essa env com os flags corretos.
+  url      = env("POSTGRES_PRISMA_URL")
+  // Direto (sem pooler) — usado pelo Prisma para migrations e introspection.
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 // =====================================================
