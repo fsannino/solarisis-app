@@ -2,6 +2,7 @@ import { Header } from "@/components/loja/header";
 import { Footer } from "@/components/loja/footer";
 import { Marquee } from "@/components/loja/marquee";
 import { WhatsAppButton } from "@/components/loja/whatsapp-button";
+import { NewsletterModal } from "@/components/loja/newsletter-modal";
 
 export default function LojaLayout({
   children
@@ -15,6 +16,7 @@ export default function LojaLayout({
       <main className="flex-1">{children}</main>
       <Footer />
       <WhatsAppButton />
+      <NewsletterModal />
     </div>
   );
 }

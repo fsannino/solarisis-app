@@ -5,11 +5,13 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { ProductGallery } from "@/components/loja/product-gallery";
 import { VariantSelector } from "@/components/loja/variant-selector";
+import { ProductTabs } from "@/components/loja/product-tabs";
+import { ProductCard } from "@/components/loja/product-card";
 
 const CATEGORY_LABEL: Record<string, string> = {
   ADULTO: "Adulto",
-  INFANTIL: "Infantil",
-  ACESSORIO: "Acessório"
+  INFANTIL: "Mini",
+  ACESSORIO: "Acessórios"
 };
 
 export async function generateMetadata({
@@ -20,12 +22,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug },
-    select: { name: true, seoTitle: true, seoDescription: true, description: true }
+    select: {
+      name: true,
+      seoTitle: true,
+      seoDescription: true,
+      description: true
+    }
   });
   if (!product) return { title: "Produto não encontrado" };
   return {
     title: product.seoTitle ?? `${product.name} — Solarisis`,
-    description: product.seoDescription ?? product.description.slice(0, 160)
+    description:
+      product.seoDescription ?? product.description.slice(0, 160)
   };
 }
 
@@ -40,7 +48,8 @@ export default async function ProductPage({
     where: { slug },
     include: {
       images: { orderBy: [{ isPrimary: "desc" }, { order: "asc" }] },
-      variants: { orderBy: [{ color: "asc" }, { size: "asc" }] }
+      variants: { orderBy: [{ color: "asc" }, { size: "asc" }] },
+      collections: { include: { collection: true } }
     }
   });
 
@@ -56,96 +65,152 @@ export default async function ProductPage({
     priceOverride: v.priceOverride?.toNumber() ?? null
   }));
 
-  const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
+  // 4 produtos relacionados — mesma categoria, exclui o atual
+  const relatedRaw = await prisma.product.findMany({
+    where: {
+      status: "ACTIVE",
+      category: product.category,
+      id: { not: product.id }
+    },
+    take: 4,
+    orderBy: { createdAt: "desc" },
+    include: {
+      images: { where: { isPrimary: true }, take: 1 },
+      variants: { select: { stock: true, color: true } }
+    }
+  });
+
+  const collectionLabel = product.collections[0]?.collection.name;
 
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-8 md:px-8 md:py-12">
-      <nav className="eyebrow mb-8 flex flex-wrap items-center gap-2 text-[10px]">
-        <Link href="/" className="hover:text-orange">
-          Início
-        </Link>
-        <span>/</span>
-        <Link href="/loja" className="hover:text-orange">
-          Loja
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/loja?categoria=${product.category}`}
-          className="hover:text-orange"
-        >
-          {CATEGORY_LABEL[product.category] ?? product.category}
-        </Link>
-        <span>/</span>
-        <span className="text-ink-soft">{product.name}</span>
-      </nav>
+    <main>
+      {/* Breadcrumb */}
+      <div className="mx-auto max-w-[1440px] px-4 pt-8 md:px-8">
+        <nav className="eyebrow flex flex-wrap items-center gap-2 text-[10px]">
+          <Link href="/" className="hover:text-orange">
+            Início
+          </Link>
+          <span>/</span>
+          <Link href="/loja" className="hover:text-orange">
+            Loja
+          </Link>
+          <span>/</span>
+          <Link
+            href={`/loja?linha=${product.category === "INFANTIL" ? "mini" : "adulto"}`}
+            className="hover:text-orange"
+          >
+            {CATEGORY_LABEL[product.category] ?? product.category}
+          </Link>
+          <span>/</span>
+          <span className="text-ink">{product.name}</span>
+        </nav>
+      </div>
 
-      <div className="grid gap-12 md:grid-cols-2 md:gap-16 lg:gap-20">
-        <ProductGallery
-          images={product.images.map((i) => ({ url: i.url, alt: i.alt }))}
-          productName={product.name}
-        />
-
-        <div className="flex flex-col gap-8">
-          <div>
-            <p className="eyebrow">{product.type}</p>
-            <h1 className="display mt-3 text-[clamp(36px,4.5vw,64px)] text-ink">
-              {product.name}
-            </h1>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full bg-orange-soft px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-orange">
-                FPU {product.fps}+
-              </span>
-              {product.tags.slice(0, 3).map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-line-strong px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-soft"
-                >
-                  {t}
-                </span>
-              ))}
-              {totalStock === 0 && (
-                <span className="rounded-full bg-ink px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-bone">
-                  Esgotado
-                </span>
-              )}
-            </div>
-          </div>
-
-          <p className="text-[16px] leading-[1.6] text-ink-soft">
-            {product.description}
-          </p>
-
-          <VariantSelector
-            variants={variantOptions}
-            basePrice={product.basePrice.toNumber()}
-            salePrice={product.salePrice?.toNumber() ?? null}
+      {/* Galeria + Info */}
+      <section className="mx-auto max-w-[1440px] px-4 pt-8 md:px-8 md:pt-10">
+        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
+          <ProductGallery
+            images={product.images.map((i) => ({ url: i.url, alt: i.alt }))}
+            productName={product.name}
           />
 
-          {product.materials.length > 0 && (
-            <div className="border-t border-line pt-7">
-              <p className="eyebrow text-[10px]">Composição</p>
-              <p className="mt-2 text-[15px] text-ink">
-                {product.materials.join(" · ")}
-              </p>
-            </div>
-          )}
+          <div className="flex flex-col gap-7 lg:sticky lg:top-24 lg:self-start">
+            {collectionLabel && (
+              <p className="eyebrow">· Coleção {collectionLabel}</p>
+            )}
+            <h1 className="display text-[clamp(40px,5vw,56px)] leading-none">
+              {product.name}
+            </h1>
 
-          <div className="grid grid-cols-3 gap-4 border-t border-line pt-7 text-[14px]">
-            <div>
-              <p className="eyebrow text-[10px]">Frete</p>
-              <p className="mt-1.5 text-ink">Grátis · R$ 399+</p>
-            </div>
-            <div>
-              <p className="eyebrow text-[10px]">Trocas</p>
-              <p className="mt-1.5 text-ink">Até 30 dias</p>
-            </div>
-            <div>
-              <p className="eyebrow text-[10px]">Pagamento</p>
-              <p className="mt-1.5 text-ink">Em até 6x</p>
-            </div>
+            <VariantSelector
+              variants={variantOptions}
+              basePrice={product.basePrice.toNumber()}
+              salePrice={product.salePrice?.toNumber() ?? null}
+            />
+
+            <ProductTabs
+              tabs={[
+                {
+                  id: "descricao",
+                  label: "Descrição",
+                  content: <p className="m-0">{product.description}</p>
+                },
+                {
+                  id: "tecnologia",
+                  label: "Tecnologia",
+                  content: (
+                    <ul className="m-0 list-disc space-y-1.5 pl-5">
+                      <li>
+                        Tecido com bloqueio de até 98% dos raios UVA e UVB
+                      </li>
+                      <li>FPU {product.fps}+ certificado AS/NZS 4399</li>
+                      <li>Secagem rápida e respirabilidade térmica</li>
+                      <li>Resistência ao sal, cloro e exposição solar</li>
+                      <li>Costura plana sem atrito na pele</li>
+                      {product.materials.length > 0 && (
+                        <li>
+                          Composição:{" "}
+                          <span className="text-ink">
+                            {product.materials.join(" · ")}
+                          </span>
+                        </li>
+                      )}
+                    </ul>
+                  )
+                },
+                {
+                  id: "cuidados",
+                  label: "Cuidados",
+                  content: (
+                    <ul className="m-0 list-disc space-y-1.5 pl-5">
+                      <li>Lave à mão com água fria após o uso</li>
+                      <li>Não usar alvejante ou amaciante</li>
+                      <li>Secar à sombra para preservar a cor</li>
+                      <li>Não passar a ferro nas estampas</li>
+                    </ul>
+                  )
+                }
+              ]}
+            />
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* Relacionados */}
+      {relatedRaw.length > 0 && (
+        <section className="mx-auto max-w-[1440px] px-4 pt-30 pb-20 md:px-8">
+          <h2 className="display mb-8 text-[clamp(36px,4vw,48px)]">
+            Combina com{" "}
+            <em className="not-italic italic">esta peça</em>.
+          </h2>
+          <div className="grid grid-cols-2 gap-x-7 gap-y-12 md:grid-cols-4">
+            {relatedRaw.map((p) => {
+              const totalStock = p.variants.reduce((s, v) => s + v.stock, 0);
+              const colorCount = new Set(
+                p.variants.map((v) => v.color).filter(Boolean)
+              ).size;
+              return (
+                <ProductCard
+                  key={p.id}
+                  product={{
+                    slug: p.slug,
+                    name: p.name,
+                    type: p.type,
+                    fps: p.fps,
+                    basePrice: p.basePrice.toNumber(),
+                    salePrice: p.salePrice?.toNumber() ?? null,
+                    imageUrl: p.images[0]?.url,
+                    imageAlt: p.images[0]?.alt ?? p.name,
+                    outOfStock: totalStock === 0,
+                    colorCount,
+                    tag: p.tags[0] ?? null
+                  }}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </main>
   );
 }
