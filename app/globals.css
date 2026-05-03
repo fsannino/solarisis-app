@@ -2,26 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --orange: #FF7A00;
-  --orange-soft: #FFE8D2;
-  --bg: #FAF7F2;
-  --surface: #FFFFFF;
-  --line: #E8DFD0;
-  --line-strong: #D4C7B0;
-  --ink: #1A1614;
-  --ink-soft: #6B5F54;
-  --ink-faint: #A89B8A;
+@layer base {
+  :root {
+    /* Solarisis — paleta da marca (alinhada ao design oficial) */
+    --orange: #FF7A00;
+    --orange-soft: #FFE8D2;
+    --green: #6FBF4A;
+    --sand: #F5E9DA;
+    --bone: #FAF7F2;          /* fundo geral */
+    --bg: #FAF7F2;             /* alias legado de --bone */
+    --surface: #FFFFFF;
+    --line: rgba(26, 22, 20, 0.12);
+    --line-strong: rgba(26, 22, 20, 0.22);
+    --ink: #1A1614;
+    --ink-soft: #4A3F38;
+    --ink-faint: #A89B8A;
+
+    /* shadcn tokens — mapeados pra paleta Solarisis (HSL) */
+    --background: 36 35% 96%;
+    --foreground: 17 13% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 17 13% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 17 13% 9%;
+    --primary: 28 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 36 35% 92%;
+    --secondary-foreground: 17 13% 9%;
+    --muted: 36 35% 92%;
+    --muted-foreground: 25 11% 38%;
+    --accent: 32 100% 91%;
+    --accent-foreground: 17 13% 9%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 33% 86%;
+    --input: 36 33% 86%;
+    --ring: 28 100% 50%;
+    --radius: 9px;
+  }
 }
 
 html,
 body {
-  background: var(--bg);
+  background: var(--bone);
   color: var(--ink);
 }
 
 body {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--orange);
+  color: white;
+}
+
+@layer base {
+  * {
+    @apply border-line;
+  }
+}
+
+/* Marquee — faixa rolando no topo */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Tipografia editorial — usadas em toda a loja pública */
+.display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 400;
+  font-variation-settings: "opsz" 144;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }

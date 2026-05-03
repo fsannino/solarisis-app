@@ -16,7 +16,7 @@ const NAV: NavGroup[] = [
   {
     title: "Vendas",
     items: [
-      { label: "Pedidos" },
+      { label: "Pedidos", href: "/admin/pedidos" },
       { label: "Pagamentos" },
       { label: "Devoluções" },
       { label: "Cupons" }
