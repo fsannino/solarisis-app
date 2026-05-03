@@ -12,7 +12,7 @@ const NAV: NavGroup[] = [
     title: "Visão geral",
     items: [
       { label: "Dashboard", href: "/admin" },
-      { label: "Relatórios" }
+      { label: "Relatórios", href: "/admin/relatorios" }
     ]
   },
   {
