@@ -1,3 +1,5 @@
+import { NewsletterCtaButton } from "./newsletter-cta-button";
+
 export function NewsletterCta() {
   return (
     <section className="mx-auto max-w-[1440px] px-4 pt-30 md:px-8">
@@ -12,15 +14,7 @@ export function NewsletterCta() {
             prioridade nos lançamentos.
           </p>
         </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2.5 rounded-full bg-ink px-6 py-3.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-bone hover:text-ink"
-        >
-          Quero entrar
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </button>
+        <NewsletterCtaButton />
       </div>
     </section>
   );
