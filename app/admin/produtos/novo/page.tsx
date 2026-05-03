@@ -9,12 +9,22 @@ export default async function NewProductPage() {
   await requireAdmin();
 
   return (
-    <div className="max-w-2xl">
-      <header className="border-line border-b pb-6">
-        <Link href="/admin/produtos" className="text-ink-soft hover:text-ink text-xs">
+    <div>
+      <header className="flex flex-col gap-3 border-b border-line pb-7">
+        <Link
+          href="/admin/produtos"
+          className="inline-flex w-fit items-center gap-1 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-ink-soft hover:text-ink"
+        >
           ← Produtos
         </Link>
-        <h1 className="font-serif mt-2 text-3xl italic">Novo produto</h1>
+        <p className="eyebrow">Catálogo</p>
+        <h1 className="display text-[clamp(28px,3vw,36px)]">
+          Novo produto
+        </h1>
+        <p className="text-[13px] text-ink-soft">
+          Cadastre o produto, adicione fotos e publique. As variantes
+          (cor × tamanho) aparecem depois de salvar.
+        </p>
       </header>
 
       <div className="mt-8">
