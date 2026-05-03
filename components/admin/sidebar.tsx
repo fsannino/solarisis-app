@@ -28,6 +28,7 @@ const NAV: NavGroup[] = [
     title: "Catálogo",
     items: [
       { label: "Produtos", href: "/admin/produtos" },
+      { label: "Biblioteca de mídia", href: "/admin/midia" },
       { label: "Estoque" },
       { label: "Coleções" }
     ]

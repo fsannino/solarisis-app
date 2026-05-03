@@ -8,6 +8,21 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-helpers";
 import { slugify } from "@/lib/slug";
 
+const productImageSchema = z.object({
+  url: z.string().url(),
+  alt: z.string().nullable().optional(),
+  isPrimary: z.boolean().optional()
+});
+
+function parseImages(raw: FormDataEntryValue | null) {
+  if (typeof raw !== "string" || raw.length === 0) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
 // Decimal vem como string do form; o Prisma aceita string para campos Decimal.
 const productSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório").max(200),
@@ -41,7 +56,8 @@ const productSchema = z.object({
     .optional()
     .or(z.literal("")),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
-  sku: z.string().trim().min(1, "SKU é obrigatório").max(40)
+  sku: z.string().trim().min(1, "SKU é obrigatório").max(40),
+  images: z.array(productImageSchema).default([])
 });
 
 export type ProductFormState =
@@ -61,7 +77,8 @@ function parse(formData: FormData) {
     salePrice: formData.get("salePrice") ?? "",
     costPrice: formData.get("costPrice") ?? "",
     status: formData.get("status"),
-    sku: formData.get("sku")
+    sku: formData.get("sku"),
+    images: parseImages(formData.get("images"))
   });
 }
 
@@ -109,7 +126,15 @@ export async function createProduct(
       salePrice: data.salePrice && data.salePrice.length > 0 ? data.salePrice : null,
       costPrice: data.costPrice && data.costPrice.length > 0 ? data.costPrice : null,
       status: data.status,
-      publishedAt: data.status === "ACTIVE" ? new Date() : null
+      publishedAt: data.status === "ACTIVE" ? new Date() : null,
+      images: {
+        create: data.images.map((img, idx) => ({
+          url: img.url,
+          alt: img.alt ?? null,
+          order: idx,
+          isPrimary: !!img.isPrimary
+        }))
+      }
     },
     select: { id: true }
   });
@@ -163,24 +188,40 @@ export async function updateProduct(
   const publishedAt =
     data.status === "ACTIVE" && !current.publishedAt ? new Date() : current.publishedAt;
 
-  await prisma.product.update({
-    where: { id },
-    data: {
-      name: data.name,
-      slug,
-      sku: data.sku,
-      description: data.description,
-      category: data.category,
-      gender: data.gender,
-      type: data.type,
-      fps: data.fps,
-      basePrice: data.basePrice,
-      salePrice: data.salePrice && data.salePrice.length > 0 ? data.salePrice : null,
-      costPrice: data.costPrice && data.costPrice.length > 0 ? data.costPrice : null,
-      status: data.status,
-      publishedAt
-    }
-  });
+  // Atualiza produto + sincroniza imagens. Estratégia simples: deleta as
+  // ProductImage antigas e recria com a nova ordem.
+  await prisma.$transaction([
+    prisma.product.update({
+      where: { id },
+      data: {
+        name: data.name,
+        slug,
+        sku: data.sku,
+        description: data.description,
+        category: data.category,
+        gender: data.gender,
+        type: data.type,
+        fps: data.fps,
+        basePrice: data.basePrice,
+        salePrice:
+          data.salePrice && data.salePrice.length > 0 ? data.salePrice : null,
+        costPrice:
+          data.costPrice && data.costPrice.length > 0 ? data.costPrice : null,
+        status: data.status,
+        publishedAt
+      }
+    }),
+    prisma.productImage.deleteMany({ where: { productId: id } }),
+    prisma.productImage.createMany({
+      data: data.images.map((img, idx) => ({
+        productId: id,
+        url: img.url,
+        alt: img.alt ?? null,
+        order: idx,
+        isPrimary: !!img.isPrimary
+      }))
+    })
+  ]);
 
   revalidatePath("/admin/produtos");
   revalidatePath(`/admin/produtos/${id}`);
