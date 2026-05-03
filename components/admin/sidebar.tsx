@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-type NavItem = { label: string; href?: string };
+type NavItem = { label: string; href?: string; badge?: string };
 type NavGroup = { title: string; items: NavItem[] };
 
-// Navegação completa conforme SCHEMA.md. Itens sem `href` aparecem
-// como "em breve" — vão ganhar links conforme as PRs próximas.
 const NAV: NavGroup[] = [
   {
     title: "Visão geral",
-    items: [{ label: "Dashboard", href: "/admin" }]
+    items: [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Relatórios" }
+    ]
   },
   {
     title: "Vendas",
@@ -35,45 +37,59 @@ const NAV: NavGroup[] = [
     items: [{ label: "Marketplaces" }, { label: "Conteúdo do site" }]
   },
   {
-    title: "CRM",
+    title: "Pessoas",
     items: [{ label: "Clientes" }, { label: "Equipe" }]
   },
   {
-    title: "Inteligência",
-    items: [{ label: "Relatórios" }, { label: "Notificações" }]
-  },
-  {
     title: "Sistema",
-    items: [{ label: "Configurações" }]
+    items: [{ label: "Notificações" }, { label: "Configurações" }]
   }
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  user
+}: {
+  user?: { name?: string | null; email?: string | null };
+}) {
   const pathname = usePathname();
+  const initials = (user?.name ?? user?.email ?? "S")
+    .split(/[\s@]+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const displayName = user?.name ?? user?.email ?? "Solarisis";
 
   return (
-    <aside className="bg-surface border-line fixed inset-y-0 left-0 hidden w-60 flex-col border-r md:flex">
-      <div className="border-line border-b px-6 py-5">
-        <Link href="/admin" className="block">
-          <p className="text-ink-soft text-[10px] uppercase tracking-widest">Solarisis</p>
-          <p className="font-serif text-xl italic">Admin</p>
+    <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-line bg-surface md:flex">
+      <div className="border-b border-line px-5 py-5">
+        <Link href="/admin" className="flex flex-col gap-1">
+          <Image
+            src="/assets/solarisis-logo-horizontal-transparent.png"
+            alt="Solarisis"
+            width={140}
+            height={28}
+            className="h-7 w-auto"
+          />
+          <span className="pl-1 text-[11px] text-ink-faint">painel admin</span>
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto py-4">
         {NAV.map((group) => (
-          <div key={group.title} className="mb-5">
-            <p className="text-ink-faint mb-1.5 px-3 text-[10px] uppercase tracking-widest">
-              {group.title}
-            </p>
-            <ul className="space-y-0.5">
+          <div key={group.title} className="mb-4">
+            <p className="eyebrow mb-1.5 px-5 text-[10px]">{group.title}</p>
+            <ul>
               {group.items.map((item) => {
                 if (!item.href) {
                   return (
                     <li key={item.label}>
-                      <span className="text-ink-faint flex items-center justify-between rounded-md px-3 py-1.5 text-sm">
+                      <span className="flex items-center justify-between px-5 py-1.5 text-[13px] text-ink-faint">
                         {item.label}
-                        <span className="text-[10px] uppercase tracking-wider">soon</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider">
+                          soon
+                        </span>
                       </span>
                     </li>
                   );
@@ -86,13 +102,18 @@ export function AdminSidebar() {
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className={`block rounded-md px-3 py-1.5 text-sm transition ${
+                      className={`flex items-center gap-3 border-l-2 px-[18px] py-1.5 text-[13px] transition-colors ${
                         isActive
-                          ? "bg-orange-soft text-ink"
-                          : "text-ink-soft hover:bg-bg hover:text-ink"
+                          ? "border-orange bg-orange-soft font-semibold text-orange"
+                          : "border-transparent font-medium text-ink-soft hover:bg-bone hover:text-ink"
                       }`}
                     >
-                      {item.label}
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge && (
+                        <span className="rounded-full bg-orange px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 );
@@ -101,6 +122,20 @@ export function AdminSidebar() {
           </div>
         ))}
       </nav>
+
+      <div className="flex items-center gap-3 border-t border-line px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-soft text-[12px] font-semibold text-orange">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-ink">
+            {displayName}
+          </p>
+          {user?.name && (
+            <p className="truncate text-[11px] text-ink-faint">{user.email}</p>
+          )}
+        </div>
+      </div>
     </aside>
   );
 }
