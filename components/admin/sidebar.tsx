@@ -12,7 +12,7 @@ const NAV: NavGroup[] = [
     title: "Visão geral",
     items: [
       { label: "Dashboard", href: "/admin" },
-      { label: "Relatórios" }
+      { label: "Relatórios", href: "/admin/relatorios" }
     ]
   },
   {
@@ -29,8 +29,8 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Produtos", href: "/admin/produtos" },
       { label: "Biblioteca de mídia", href: "/admin/midia" },
-      { label: "Estoque" },
-      { label: "Coleções" }
+      { label: "Estoque", href: "/admin/estoque" },
+      { label: "Coleções", href: "/admin/colecoes" }
     ]
   },
   {
