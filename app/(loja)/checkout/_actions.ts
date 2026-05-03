@@ -11,6 +11,7 @@ import { nextOrderNumber } from "@/lib/order-number";
 import { FREE_SHIPPING_MIN, SHIPPING_FLAT } from "@/lib/checkout";
 import { createPreference, getBaseUrl } from "@/lib/mercadopago";
 import { calculateShipping } from "@/lib/melhor-envio";
+import { validateCoupon } from "@/lib/coupons";
 import { sendOrderCreatedEmail } from "@/lib/email/order-emails";
 
 const onlyDigits = (v: unknown) =>
@@ -35,7 +36,8 @@ const checkoutSchema = z.object({
   saveAddress: z
     .preprocess((v) => v === "on" || v === true || v === "true", z.boolean())
     .optional(),
-  notes: z.string().max(500).optional()
+  notes: z.string().max(500).optional(),
+  couponCode: z.string().trim().optional()
 });
 
 export type CheckoutFieldErrors = Partial<
@@ -192,7 +194,30 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
     shippingCarrier = "Correios";
   }
 
-  const total = subtotal + shipping;
+  // Cupom — revalida server-side com regras (status, validade, limites).
+  // Nunca confiar no desconto enviado pelo client.
+  let discount = 0;
+  let appliedCouponCode: string | null = null;
+  if (data.couponCode && data.couponCode.length > 0) {
+    const couponResult = await validateCoupon({
+      code: data.couponCode,
+      subtotal,
+      customerId
+    });
+    if (!couponResult.ok) {
+      return {
+        ok: false,
+        errors: { couponCode: couponResult.error }
+      };
+    }
+    appliedCouponCode = couponResult.coupon.code;
+    discount = couponResult.discount;
+    if (couponResult.freeShipping) {
+      shipping = 0;
+    }
+  }
+
+  const total = Math.max(0, subtotal - discount + shipping);
 
   const addressSnapshot = {
     recipient: data.recipient,
@@ -250,6 +275,7 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
         customerId,
         subtotal,
         shippingCost: shipping,
+        discount,
         total,
         shippingAddress: addressSnapshot,
         billingAddress: addressSnapshot,
@@ -258,6 +284,7 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
         status: "PENDING",
         shippingMethod: shippingMethodLabel,
         carrier: shippingCarrier,
+        couponCode: appliedCouponCode,
         notes: data.notes || null,
         items: {
           create: orderItemsData
@@ -269,12 +296,21 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
             metadata: {
               paymentMethod: data.paymentMethod,
               shipping: shippingMethodLabel,
-              carrier: shippingCarrier
+              carrier: shippingCarrier,
+              coupon: appliedCouponCode
             }
           }
         }
       }
     });
+
+    // Incrementa contador do cupom (race-safe via increment).
+    if (appliedCouponCode) {
+      await tx.coupon.update({
+        where: { code: appliedCouponCode },
+        data: { usedCount: { increment: 1 } }
+      });
+    }
 
     // Limpa carrinho
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -290,6 +326,12 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
     select: { email: true, name: true }
   });
 
+  // Aplica o desconto do cupom proporcionalmente nos items pro MP cobrar
+  // o valor correto (MP não aceita line items negativos). FREE_SHIPPING
+  // já está refletido em `shipping`.
+  const discountFactor =
+    discount > 0 && subtotal > 0 ? (subtotal - discount) / subtotal : 1;
+
   let initPoint: string | null = null;
   try {
     const baseUrl = await getBaseUrl();
@@ -301,7 +343,7 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
           ? `${it.productName} (${it.variantLabel})`
           : it.productName,
         quantity: it.quantity,
-        unit_price: it.unitPrice
+        unit_price: Number((it.unitPrice * discountFactor).toFixed(2))
       })),
       shippingCost: shipping,
       payer: {

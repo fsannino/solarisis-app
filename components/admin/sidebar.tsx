@@ -21,7 +21,7 @@ const NAV: NavGroup[] = [
       { label: "Pedidos", href: "/admin/pedidos" },
       { label: "Pagamentos" },
       { label: "Devoluções" },
-      { label: "Cupons" }
+      { label: "Cupons", href: "/admin/cupons" }
     ]
   },
   {
