@@ -67,6 +67,15 @@ const OPTIONAL: Group[] = [
   {
     title: "Monitoramento (Sentry)",
     vars: [{ name: "SENTRY_DSN" }]
+  },
+  {
+    title: "Atendimento (WhatsApp flutuante na loja)",
+    vars: [
+      {
+        name: "NEXT_PUBLIC_WHATSAPP_NUMBER",
+        hint: "DDI+DDD+numero, ex: 5511999999999"
+      }
+    ]
   }
 ];
 
