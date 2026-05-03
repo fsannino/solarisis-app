@@ -6,8 +6,12 @@ import { OrderStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-helpers";
-import { sendOrderShippedEmail } from "@/lib/email/order-emails";
+import {
+  sendOrderInvoiceEmail,
+  sendOrderShippedEmail
+} from "@/lib/email/order-emails";
 import { getBaseUrl } from "@/lib/mercadopago";
+import { emitNfe } from "@/lib/bling/nfe";
 
 export type AdminOrderActionResult =
   | { ok: true }
@@ -169,6 +173,107 @@ export async function markAsDelivered(
       }
     })
   ]);
+
+  revalidatePath(`/admin/pedidos`);
+  revalidatePath(`/admin/pedidos/${order.number}`);
+  return { ok: true };
+}
+
+export async function emitInvoice(
+  formData: FormData
+): Promise<AdminOrderActionResult> {
+  const session = await requireAdmin();
+  const number = String(formData.get("number") ?? "");
+  if (!number) return { ok: false, error: "Pedido inválido." };
+
+  const order = await prisma.order.findUnique({
+    where: { number },
+    include: {
+      customer: true,
+      items: { include: { variant: { select: { sku: true } } } }
+    }
+  });
+  if (!order) return { ok: false, error: "Pedido não encontrado." };
+  if (order.paymentStatus !== "PAID") {
+    return {
+      ok: false,
+      error: "Só pedidos com pagamento confirmado podem emitir NF-e."
+    };
+  }
+  if (order.nfeKey) {
+    return { ok: false, error: "Esse pedido já tem NF-e emitida." };
+  }
+
+  const result = await emitNfe({
+    order,
+    customer: {
+      name: order.customer.name,
+      email: order.customer.email,
+      cpf: order.customer.cpf,
+      phone: order.customer.phone
+    }
+  });
+
+  if (!result.ok) {
+    await prisma.orderEvent.create({
+      data: {
+        orderId: order.id,
+        type: "nfe_failed",
+        message: `Falha ao emitir NF-e: ${result.error}`,
+        metadata: { error: result.error },
+        createdBy: session.user.id
+      }
+    });
+    revalidatePath(`/admin/pedidos/${order.number}`);
+    return { ok: false, error: result.error };
+  }
+
+  await prisma.$transaction([
+    prisma.order.update({
+      where: { id: order.id },
+      data: {
+        nfeNumber: result.number,
+        nfeKey: result.key,
+        nfeUrl: result.url
+      }
+    }),
+    prisma.orderEvent.create({
+      data: {
+        orderId: order.id,
+        type: result.pending ? "nfe_pending" : "nfe_emitted",
+        message: result.pending
+          ? "NF-e enviada à SEFAZ, aguardando autorização."
+          : `NF-e emitida${result.number ? ` (#${result.number})` : ""}.`,
+        metadata: {
+          blingId: result.blingId,
+          number: result.number,
+          key: result.key
+        },
+        createdBy: session.user.id
+      }
+    })
+  ]);
+
+  if (!result.pending && result.url && order.customer.email) {
+    try {
+      const baseUrl = await getBaseUrl();
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: true }
+      });
+      if (fullOrder) {
+        await sendOrderInvoiceEmail({
+          order: fullOrder,
+          customer: { name: order.customer.name, email: order.customer.email },
+          baseUrl,
+          nfeNumber: result.number,
+          nfeUrl: result.url
+        });
+      }
+    } catch (err) {
+      console.error("[email] erro ao enviar nfe_emitida:", err);
+    }
+  }
 
   revalidatePath(`/admin/pedidos`);
   revalidatePath(`/admin/pedidos/${order.number}`);

@@ -199,6 +199,40 @@ export function orderCreatedEmail(o: OrderEmailData) {
   return { subject, html: shell({ preheader, body }) };
 }
 
+export function orderInvoiceEmail(
+  o: OrderEmailData & { nfeNumber: string | null; nfeUrl: string }
+) {
+  const firstName = o.customerName.split(" ")[0];
+  const subject = o.nfeNumber
+    ? `Sua NF-e #${o.nfeNumber} · pedido #${o.orderNumber}`
+    : `Sua NF-e · pedido #${o.orderNumber}`;
+  const preheader = "Acesse a nota fiscal eletrônica do seu pedido.";
+
+  const body = `
+    <tr>
+      <td style="padding:8px 32px 0;">
+        <p style="margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.inkSoft};">Nota fiscal disponível</p>
+        <h1 style="margin:8px 0 0;font-family:${FONT_SERIF};font-style:italic;font-size:32px;line-height:1.1;color:${COLORS.ink};">Sua NF-e está pronta, ${escapeHtml(firstName)}.</h1>
+        <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:${COLORS.inkSoft};">
+          A nota fiscal do pedido <strong style="color:${COLORS.ink};">#${escapeHtml(o.orderNumber)}</strong> ${o.nfeNumber ? `(NF-e #${escapeHtml(o.nfeNumber)})` : ""} foi autorizada pela SEFAZ.
+        </p>
+        <div style="margin-top:24px;">${button(o.nfeUrl, "Baixar NF-e (PDF)")}</div>
+        <p style="margin:16px 0 0;font-size:12px;color:${COLORS.inkFaint};">
+          Guarde uma cópia — vale como comprovante fiscal da compra.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 32px 32px;">
+        <p style="margin:0;font-size:13px;color:${COLORS.inkSoft};">
+          Acompanhe o pedido em <a href="${o.orderUrl}" style="color:${COLORS.orange};">${o.orderUrl}</a>.
+        </p>
+      </td>
+    </tr>`;
+
+  return { subject, html: shell({ preheader, body }) };
+}
+
 export function orderShippedEmail(
   o: OrderEmailData & { trackingCode: string; carrier: string }
 ) {

@@ -3,6 +3,7 @@ import type { Order, OrderItem, Customer, Prisma } from "@prisma/client";
 import { safeSendEmail } from "./client";
 import {
   orderCreatedEmail,
+  orderInvoiceEmail,
   orderPaidEmail,
   orderShippedEmail,
   type OrderEmailData
@@ -72,6 +73,26 @@ export async function sendOrderPaidEmail(input: {
 }) {
   const data = buildEmailData(input);
   const { subject, html } = orderPaidEmail(data);
+  return safeSendEmail({
+    to: input.customer.email,
+    subject,
+    html
+  });
+}
+
+export async function sendOrderInvoiceEmail(input: {
+  order: OrderWithItems;
+  customer: Pick<Customer, "name" | "email">;
+  baseUrl: string;
+  nfeNumber: string | null;
+  nfeUrl: string;
+}) {
+  const data = buildEmailData(input);
+  const { subject, html } = orderInvoiceEmail({
+    ...data,
+    nfeNumber: input.nfeNumber,
+    nfeUrl: input.nfeUrl
+  });
   return safeSendEmail({
     to: input.customer.email,
     subject,

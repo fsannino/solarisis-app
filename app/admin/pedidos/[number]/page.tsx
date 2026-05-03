@@ -294,12 +294,46 @@ export default async function AdminOrderDetailPage({
 
           <section className="bg-surface border-line rounded-lg border p-5">
             <p className="text-ink-soft text-xs uppercase tracking-widest">
+              Nota fiscal
+            </p>
+            {order.nfeKey ? (
+              <div className="mt-2 space-y-1 text-sm">
+                {order.nfeNumber && (
+                  <p className="text-ink">
+                    NF-e <strong>#{order.nfeNumber}</strong>
+                  </p>
+                )}
+                <p className="text-ink-faint break-all font-mono text-[11px]">
+                  {order.nfeKey}
+                </p>
+                {order.nfeUrl && (
+                  <a
+                    href={order.nfeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange hover:underline text-xs underline-offset-4"
+                  >
+                    Baixar PDF →
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p className="text-ink-soft mt-2 text-xs">
+                NF-e ainda não emitida. Emita pelo painel de ações abaixo.
+              </p>
+            )}
+          </section>
+
+          <section className="bg-surface border-line rounded-lg border p-5">
+            <p className="text-ink-soft text-xs uppercase tracking-widest">
               Ações
             </p>
             <div className="mt-3">
               <ActionsPanel
                 number={order.number}
                 status={order.status}
+                paymentStatus={order.paymentStatus}
+                hasInvoice={Boolean(order.nfeKey)}
                 carrierDefault={order.carrier}
               />
             </div>

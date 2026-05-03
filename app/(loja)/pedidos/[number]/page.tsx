@@ -226,6 +226,31 @@ export default async function OrderConfirmationPage({
         </div>
       </section>
 
+      {order.nfeUrl && (
+        <section className="mt-8 rounded-2xl border border-line bg-surface p-6 md:p-8">
+          <p className="text-xs uppercase tracking-widest text-ink-soft">
+            Nota fiscal
+          </p>
+          <p className="mt-2 text-sm text-ink">
+            {order.nfeNumber ? (
+              <>
+                NF-e <strong>#{order.nfeNumber}</strong> · autorizada pela SEFAZ.
+              </>
+            ) : (
+              "NF-e disponível pra download."
+            )}
+          </p>
+          <a
+            href={order.nfeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange mt-2 inline-block text-sm underline-offset-4 hover:underline"
+          >
+            Baixar PDF →
+          </a>
+        </section>
+      )}
+
       <section className="mt-8 grid gap-4 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2 md:p-8">
         <div>
           <p className="text-xs uppercase tracking-widest text-ink-soft">

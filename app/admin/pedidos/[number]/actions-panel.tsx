@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { OrderStatus } from "@prisma/client";
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 
 import {
   cancelOrder,
+  emitInvoice,
   markAsDelivered,
   markAsPreparing,
   markAsShipped,
@@ -16,10 +17,14 @@ const initial: AdminOrderActionResult = { ok: true };
 export function ActionsPanel({
   number,
   status,
+  paymentStatus,
+  hasInvoice,
   carrierDefault
 }: {
   number: string;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  hasInvoice: boolean;
   carrierDefault: string | null;
 }) {
   const [prepState, prepAction, prepPending] = useActionState(
@@ -38,6 +43,10 @@ export function ActionsPanel({
     async (_p: AdminOrderActionResult, fd: FormData) => cancelOrder(fd),
     initial
   );
+  const [nfeState, nfeAction, nfePending] = useActionState(
+    async (_p: AdminOrderActionResult, fd: FormData) => emitInvoice(fd),
+    initial
+  );
 
   const [showCancel, setShowCancel] = useState(false);
 
@@ -45,6 +54,7 @@ export function ActionsPanel({
   const canShip = status === "PAID" || status === "PREPARING";
   const canDeliver = status === "SHIPPED";
   const canCancel = !["DELIVERED", "CANCELED", "RETURNED"].includes(status);
+  const canEmitInvoice = paymentStatus === "PAID" && !hasInvoice;
 
   return (
     <div className="flex flex-col gap-4">
@@ -109,6 +119,25 @@ export function ActionsPanel({
           {!delivState.ok && (
             <p className="text-destructive mt-2 text-xs">{delivState.error}</p>
           )}
+        </form>
+      )}
+
+      {canEmitInvoice && (
+        <form action={nfeAction} className="border-line border-t pt-4">
+          <input type="hidden" name="number" value={number} />
+          <button
+            type="submit"
+            disabled={nfePending}
+            className="border-line-strong hover:border-orange hover:bg-orange-soft w-full rounded-md border bg-transparent px-4 py-2.5 text-sm font-medium text-ink disabled:opacity-60"
+          >
+            {nfePending ? "Emitindo NF-e…" : "Emitir NF-e"}
+          </button>
+          {!nfeState.ok && (
+            <p className="text-destructive mt-2 text-xs">{nfeState.error}</p>
+          )}
+          <p className="text-ink-faint mt-2 text-xs">
+            Envia a nota via Bling pra SEFAZ. Pode levar alguns segundos.
+          </p>
         </form>
       )}
 
