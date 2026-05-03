@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, formatBRL } from "@/lib/utils";
+import {
+  CouponInput,
+  type AppliedCoupon
+} from "@/components/loja/coupon-input";
 import { createOrder, type CheckoutResult } from "./_actions";
 import type { ShippingResponse } from "@/app/api/shipping/calculate/route";
 
@@ -69,10 +73,13 @@ export function CheckoutForm({
   const [shippingSource, setShippingSource] = useState<
     "melhor-envio" | "fallback" | null
   >(null);
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
 
   const selectedShipping = shippingOptions.find((o) => o.id === shippingId);
-  const shippingCost = selectedShipping?.price ?? 0;
-  const total = subtotal + shippingCost;
+  const rawShippingCost = selectedShipping?.price ?? 0;
+  const shippingCost = coupon?.freeShipping ? 0 : rawShippingCost;
+  const discount = coupon?.discount ?? 0;
+  const total = Math.max(0, subtotal - discount + shippingCost);
 
   async function lookupCep() {
     const digits = cep.replace(/\D/g, "");
@@ -395,18 +402,42 @@ export function CheckoutForm({
         />
       </fieldset>
 
+      <fieldset className="flex flex-col gap-3 border-t border-line pt-8">
+        <legend className="font-serif text-2xl italic text-ink">
+          Cupom
+        </legend>
+        <CouponInput
+          applied={coupon}
+          onApply={setCoupon}
+          onClear={() => setCoupon(null)}
+        />
+      </fieldset>
+
       <div className="flex flex-col gap-2 border-t border-line pt-6 text-sm">
         <div className="flex justify-between text-ink-soft">
           <span>Subtotal</span>
           <span className="text-ink">{formatBRL(subtotal)}</span>
         </div>
+        {discount > 0 && (
+          <div className="flex justify-between text-orange">
+            <span>Desconto · {coupon?.code}</span>
+            <span>− {formatBRL(discount)}</span>
+          </div>
+        )}
         <div className="flex justify-between text-ink-soft">
           <span>Frete</span>
           <span className="text-ink">
             {selectedShipping
-              ? selectedShipping.price === 0
-                ? "Grátis"
-                : formatBRL(selectedShipping.price)
+              ? coupon?.freeShipping
+                ? <>
+                    <span className="mr-1 text-ink-faint line-through">
+                      {formatBRL(rawShippingCost)}
+                    </span>
+                    <span className="text-orange">Grátis</span>
+                  </>
+                : selectedShipping.price === 0
+                  ? "Grátis"
+                  : formatBRL(selectedShipping.price)
               : "—"}
           </span>
         </div>
