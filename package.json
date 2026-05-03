@@ -11,6 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx prisma/seed.ts",
+    "check:env": "tsx scripts/check-env.ts",
+    "admin:create": "tsx scripts/create-admin.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
