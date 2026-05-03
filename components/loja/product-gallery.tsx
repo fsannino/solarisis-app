@@ -11,13 +11,11 @@ export function ProductGallery({
 }) {
   const primary = images[0];
   if (!primary) {
-    return (
-      <div className="aspect-[4/5] w-full rounded-2xl bg-line" />
-    );
+    return <div className="aspect-[4/5] w-full bg-sand" />;
   }
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-line">
+      <div className="relative aspect-[4/5] overflow-hidden bg-sand">
         <Image
           src={primary.url}
           alt={primary.alt ?? productName}
@@ -32,7 +30,7 @@ export function ProductGallery({
           {images.slice(1, 5).map((img) => (
             <div
               key={img.url}
-              className="relative aspect-square overflow-hidden rounded-lg bg-line"
+              className="relative aspect-square overflow-hidden bg-sand"
             >
               <Image
                 src={img.url}

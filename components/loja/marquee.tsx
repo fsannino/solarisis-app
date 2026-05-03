@@ -3,7 +3,7 @@ const DEFAULT_ITEMS = [
   "Verão 26 — Coleção Solar Flow chegou",
   "10% off na primeira compra · entre na newsletter",
   "Linha mini disponível",
-  "FPS 50+ certificado",
+  "FPU 50+ certificado",
   "Pagamento em até 6x sem juros"
 ];
 

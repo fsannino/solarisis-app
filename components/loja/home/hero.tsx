@@ -15,7 +15,7 @@ export function Hero() {
               <em className="not-italic italic text-orange">seu jeito.</em>
             </h1>
             <p className="mt-8 max-w-[460px] text-[17px] leading-[1.55] text-ink-soft">
-              Moda praia com proteção FPS 50+ — para quem quer aproveitar
+              Moda praia com proteção FPU 50+ — para quem quer aproveitar
               cada raio sem medo, do mergulho ao café da tarde.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
@@ -47,7 +47,7 @@ export function Hero() {
               />
             </div>
             <div className="absolute -bottom-6 -left-6 max-w-[240px] border border-line bg-bone p-4 md:-bottom-7 md:-left-7 md:p-5">
-              <p className="eyebrow text-[10px]">FPS 50+ certificado</p>
+              <p className="eyebrow text-[10px]">FPU 50+ certificado</p>
               <p className="mt-1 font-serif text-[19px] font-medium leading-[1.2]">
                 Bloqueia 98% dos raios UV — testado e aprovado.
               </p>

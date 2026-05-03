@@ -94,7 +94,7 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
             {product.name}
           </p>
           <p className="eyebrow mt-1 text-[10px]">
-            FPS {product.fps}+{colorLabel ? ` · ${colorLabel}` : ""}
+            FPU {product.fps}+{colorLabel ? ` · ${colorLabel}` : ""}
           </p>
         </div>
         <p className="font-serif text-[17px] font-medium text-ink">

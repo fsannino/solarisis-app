@@ -3,7 +3,7 @@
 import { Marquee } from "@/components/loja/marquee";
 
 const ITEMS = [
-  "FPS 50+ certificado",
+  "FPU 50+ certificado",
   "Frete grátis acima de R$ 399",
   "Verão 26 — Coleção Solar Flow",
   "Linha família — adulto + mini",

@@ -2,7 +2,7 @@
 
 ## O que é
 
-Loja virtual de moda solar (FPS 50+) brasileira, marca Solarisis. Modelo D2C (loja própria) + multi-marketplace (Mercado Livre, Shopee, Amazon, Magalu).
+Loja virtual de moda solar (FPU 50+) brasileira, marca Solarisis. Modelo D2C (loja própria) + multi-marketplace (Mercado Livre, Shopee, Amazon, Magalu).
 
 ## Stack
 

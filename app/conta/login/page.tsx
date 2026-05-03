@@ -19,32 +19,34 @@ export default async function CustomerLoginPage(props: { searchParams: SearchPar
   }
 
   return (
-    <main className="bg-bg flex min-h-screen items-center justify-center px-6 py-20">
-      <div className="bg-surface border-line w-full max-w-md rounded-xl border p-10 shadow-sm">
-        <p className="text-ink-soft text-xs uppercase tracking-widest">Solarisis</p>
-        <h1 className="font-serif mt-2 text-3xl italic">Sua conta</h1>
-        <p className="text-ink-soft mt-2 text-sm">
+    <main className="flex min-h-screen items-center justify-center bg-bone px-4 py-20">
+      <div className="w-full max-w-md border border-line bg-surface p-10 md:p-12">
+        <p className="eyebrow">Solarisis</p>
+        <h1 className="display mt-3 text-[40px]">
+          Sua <em className="not-italic italic text-orange">conta</em>.
+        </h1>
+        <p className="mt-3 text-[15px] text-ink-soft">
           Entre para acompanhar pedidos, salvar endereços e favoritos.
         </p>
 
-        {error ? (
-          <p className="mt-6 text-sm text-red-700">
+        {error && (
+          <p className="mt-6 text-sm text-destructive">
             Não conseguimos entrar. Tente de novo.
           </p>
-        ) : null}
+        )}
 
         <form action={handleGoogleSignIn} className="mt-8">
           <button
             type="submit"
-            className="border-line hover:border-line-strong bg-surface flex w-full items-center justify-center gap-3 rounded-md border py-3 text-sm font-medium transition"
+            className="flex w-full items-center justify-center gap-3 rounded-full border border-line-strong bg-transparent py-3.5 text-sm font-semibold text-ink transition-all hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-bone [&:hover_path]:fill-bone"
           >
             <GoogleMark />
             Continuar com Google
           </button>
         </form>
 
-        <p className="text-ink-faint mt-8 text-center text-xs">
-          Outros métodos de login virão em breve.
+        <p className="eyebrow mt-10 text-center text-[10px]">
+          Outros métodos de login virão em breve
         </p>
       </div>
     </main>

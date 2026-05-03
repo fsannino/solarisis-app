@@ -13,28 +13,37 @@ export default async function CustomerAccountPage() {
     await signOut({ redirectTo: "/" });
   }
 
-  return (
-    <main className="bg-bg min-h-screen px-6 py-12 md:px-12">
-      <header className="border-line flex items-center justify-between border-b pb-6">
-        <div>
-          <p className="text-ink-soft text-xs uppercase tracking-widest">Solarisis · Conta</p>
-          <h1 className="font-serif mt-1 text-3xl italic">Olá, {session.user.name}.</h1>
-        </div>
-        <form action={handleSignOut}>
-          <button
-            type="submit"
-            className="border-line text-ink hover:border-line-strong rounded-md border px-4 py-2 text-sm transition"
-          >
-            Sair
-          </button>
-        </form>
-      </header>
+  const firstName = session.user.name?.split(" ")[0] ?? "amiga";
 
-      <section className="mt-10 max-w-2xl">
-        <p className="text-ink-soft text-sm">
-          Em breve: seus pedidos, endereços, favoritos e devoluções.
-        </p>
-      </section>
+  return (
+    <main className="min-h-screen bg-bone px-4 py-16 md:px-8 md:py-24">
+      <div className="mx-auto max-w-[1200px]">
+        <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
+          <div>
+            <p className="eyebrow">Solarisis · Conta</p>
+            <h1 className="display mt-3 text-[clamp(36px,5vw,56px)]">
+              Olá,{" "}
+              <em className="not-italic italic text-orange">{firstName}</em>.
+            </h1>
+          </div>
+          <form action={handleSignOut}>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-full border border-line-strong px-5 py-2.5 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-bone"
+            >
+              Sair
+            </button>
+          </form>
+        </header>
+
+        <section className="mt-10 max-w-[640px]">
+          <p className="text-[15px] leading-[1.6] text-ink-soft">
+            Em breve você vai ver aqui seus pedidos, endereços salvos,
+            favoritos e devoluções. Por enquanto, qualquer pedido feito
+            chega no seu email — e você acompanha pelo link enviado.
+          </p>
+        </section>
+      </div>
     </main>
   );
 }
