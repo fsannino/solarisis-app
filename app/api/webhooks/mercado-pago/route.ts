@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { getPayment, verifyWebhookSignature } from "@/lib/mercadopago";
+import {
+  getBaseUrl,
+  getPayment,
+  verifyWebhookSignature
+} from "@/lib/mercadopago";
+import { sendOrderPaidEmail } from "@/lib/email/order-emails";
 import {
   PaymentStatus as PrismaPaymentStatus,
   OrderStatus as PrismaOrderStatus
@@ -88,6 +93,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, note: "no change" });
   }
 
+  const becamePaid =
+    next.paymentStatus === "PAID" && order.paymentStatus !== "PAID";
+
   await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: order.id },
@@ -127,6 +135,29 @@ export async function POST(req: NextRequest) {
       }
     });
   });
+
+  if (becamePaid) {
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id: order.customerId },
+        select: { name: true, email: true }
+      });
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: true }
+      });
+      if (customer?.email && fullOrder) {
+        const baseUrl = await getBaseUrl();
+        await sendOrderPaidEmail({
+          order: fullOrder,
+          customer,
+          baseUrl
+        });
+      }
+    } catch (err) {
+      console.error("[email] erro ao enviar pagamento_aprovado:", err);
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
