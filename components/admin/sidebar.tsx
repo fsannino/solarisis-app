@@ -39,7 +39,7 @@ const NAV: NavGroup[] = [
   },
   {
     title: "Pessoas",
-    items: [{ label: "Clientes" }, { label: "Equipe" }]
+    items: [{ label: "Clientes", href: "/admin/clientes" }, { label: "Equipe" }]
   },
   {
     title: "Sistema",
