@@ -62,11 +62,14 @@ export async function generateMetadata({
 }
 
 export default async function OrderConfirmationPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ number: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   const { number } = await params;
+  const { status: backStatus } = await searchParams;
   const session = await requireCustomer(`/pedidos/${number}`);
 
   const order = await prisma.order.findUnique({
@@ -92,9 +95,47 @@ export default async function OrderConfirmationPage({
 
   const ship = order.shippingAddress as Record<string, string | null>;
   const status = STATUS_COPY[order.status] ?? STATUS_COPY.PENDING;
+  const paymentDetails = (order.paymentDetails ?? {}) as {
+    initPoint?: string;
+  };
+  const initPoint = paymentDetails.initPoint;
+  const showPayCta =
+    order.paymentStatus === "PENDING" && order.status === "PENDING" && !!initPoint;
+
+  const backBanner =
+    backStatus === "approved"
+      ? {
+          tone: "ok" as const,
+          msg: "Pagamento recebido. Estamos confirmando os detalhes — pode ficar tranquilo."
+        }
+      : backStatus === "pending"
+        ? {
+            tone: "info" as const,
+            msg: "Pagamento em processamento. Você recebe a confirmação por e-mail assim que for aprovado."
+          }
+        : backStatus === "rejected"
+          ? {
+              tone: "error" as const,
+              msg: "Não conseguimos aprovar o pagamento. Você pode tentar de novo abaixo."
+            }
+          : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-8 md:py-20">
+      {backBanner && (
+        <div
+          className={
+            backBanner.tone === "ok"
+              ? "mb-6 rounded-md border border-orange/30 bg-orange-soft px-4 py-3 text-sm text-ink"
+              : backBanner.tone === "error"
+                ? "mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                : "mb-6 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink-soft"
+          }
+          role="status"
+        >
+          {backBanner.msg}
+        </div>
+      )}
       <div className="rounded-2xl border border-line bg-surface p-8 md:p-12">
         <Badge variant={status.tone}>{status.title}</Badge>
         <h1 className="mt-4 font-serif text-4xl italic text-ink md:text-5xl">
@@ -206,15 +247,24 @@ export default async function OrderConfirmationPage({
             Próximos passos
           </p>
           <p className="mt-2 text-sm text-ink-soft">
-            A integração com Mercado Pago para pagamento real chega no
-            próximo PR. Por ora, esse pedido fica como{" "}
-            <em>aguardando pagamento</em>.
+            {showPayCta
+              ? "Conclua o pagamento pra a gente começar a separar seu pedido."
+              : order.paymentStatus === "PAID"
+                ? "Pagamento confirmado. A nota fiscal sai junto com o envio."
+                : "Assim que o pagamento for confirmado pelo Mercado Pago, atualizamos esse status automaticamente."}
           </p>
         </div>
       </section>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild>
+        {showPayCta && (
+          <Button asChild size="lg">
+            <a href={initPoint!} rel="noopener noreferrer">
+              Pagar com Mercado Pago
+            </a>
+          </Button>
+        )}
+        <Button asChild variant={showPayCta ? "outline" : "default"}>
           <Link href="/loja">Continuar comprando</Link>
         </Button>
         <Button asChild variant="outline">

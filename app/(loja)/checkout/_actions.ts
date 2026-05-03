@@ -9,6 +9,7 @@ import { prisma } from "@/lib/db";
 import { getCart } from "@/lib/cart";
 import { nextOrderNumber } from "@/lib/order-number";
 import { FREE_SHIPPING_MIN, SHIPPING_FLAT } from "@/lib/checkout";
+import { createPreference, getBaseUrl } from "@/lib/mercadopago";
 
 const onlyDigits = (v: unknown) =>
   typeof v === "string" ? v.replace(/\D/g, "") : v;
@@ -200,6 +201,63 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
     return created;
   });
 
+  // Cria preferência no Mercado Pago. Se MP_ACCESS_TOKEN não estiver
+  // configurado (dev sem credencial), cai pra confirmação local sem
+  // pagamento. Em prod, redireciona pro init_point.
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    select: { email: true, name: true }
+  });
+
+  let initPoint: string | null = null;
+  try {
+    const baseUrl = await getBaseUrl();
+    const pref = await createPreference({
+      orderNumber: order.number,
+      items: orderItemsData.map((it) => ({
+        id: it.variantId,
+        title: it.variantLabel
+          ? `${it.productName} (${it.variantLabel})`
+          : it.productName,
+        quantity: it.quantity,
+        unit_price: it.unitPrice
+      })),
+      shippingCost: shipping,
+      payer: {
+        email: customer?.email ?? "",
+        name: customer?.name ?? data.recipient,
+        identification: { type: "CPF", number: data.cpf },
+        phone: {
+          area_code: data.phone.slice(0, 2),
+          number: data.phone.slice(2)
+        }
+      },
+      baseUrl
+    });
+    if (pref) {
+      initPoint = pref.init_point;
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          gatewayId: pref.id,
+          paymentDetails: { initPoint: pref.init_point }
+        }
+      });
+    }
+  } catch (err) {
+    // Não derruba o pedido se o MP falhar — pedido fica PENDING e o
+    // cliente pode tentar de novo via /pedidos/[number].
+    console.error("[mercado-pago] erro ao criar preference:", err);
+    await prisma.orderEvent.create({
+      data: {
+        orderId: order.id,
+        type: "payment_error",
+        message: "Falha ao criar preferência no Mercado Pago.",
+        metadata: { error: err instanceof Error ? err.message : String(err) }
+      }
+    });
+  }
+
   revalidatePath("/", "layout");
-  redirect(`/pedidos/${order.number}`);
+  redirect(initPoint ?? `/pedidos/${order.number}`);
 }
