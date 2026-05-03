@@ -4,6 +4,7 @@ import { safeSendEmail } from "./client";
 import {
   orderCreatedEmail,
   orderPaidEmail,
+  orderShippedEmail,
   type OrderEmailData
 } from "./templates";
 
@@ -71,6 +72,26 @@ export async function sendOrderPaidEmail(input: {
 }) {
   const data = buildEmailData(input);
   const { subject, html } = orderPaidEmail(data);
+  return safeSendEmail({
+    to: input.customer.email,
+    subject,
+    html
+  });
+}
+
+export async function sendOrderShippedEmail(input: {
+  order: OrderWithItems;
+  customer: Pick<Customer, "name" | "email">;
+  baseUrl: string;
+  trackingCode: string;
+  carrier: string;
+}) {
+  const data = buildEmailData(input);
+  const { subject, html } = orderShippedEmail({
+    ...data,
+    trackingCode: input.trackingCode,
+    carrier: input.carrier
+  });
   return safeSendEmail({
     to: input.customer.email,
     subject,

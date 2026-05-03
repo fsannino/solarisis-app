@@ -199,6 +199,54 @@ export function orderCreatedEmail(o: OrderEmailData) {
   return { subject, html: shell({ preheader, body }) };
 }
 
+export function orderShippedEmail(
+  o: OrderEmailData & { trackingCode: string; carrier: string }
+) {
+  const firstName = o.customerName.split(" ")[0];
+  const subject = `Seu pedido #${o.orderNumber} saiu pra entrega`;
+  const preheader = `Código de rastreio: ${o.trackingCode}`;
+
+  const body = `
+    <tr>
+      <td style="padding:8px 32px 0;">
+        <p style="margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.inkSoft};">A caminho</p>
+        <h1 style="margin:8px 0 0;font-family:${FONT_SERIF};font-style:italic;font-size:32px;line-height:1.1;color:${COLORS.ink};">Tá indo pra você, ${escapeHtml(firstName)}.</h1>
+        <p style="margin:12px 0 0;font-size:15px;line-height:22px;color:${COLORS.inkSoft};">
+          Seu pedido <strong style="color:${COLORS.ink};">#${escapeHtml(o.orderNumber)}</strong> saiu pra entrega via <strong style="color:${COLORS.ink};">${escapeHtml(o.carrier)}</strong>.
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 32px 0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${COLORS.orangeSoft};border-radius:12px;">
+          <tr>
+            <td style="padding:20px 24px;">
+              <p style="margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.inkSoft};">Código de rastreio</p>
+              <p style="margin:6px 0 0;font-family:${FONT_SANS};font-size:18px;font-weight:500;color:${COLORS.ink};letter-spacing:1px;">${escapeHtml(o.trackingCode)}</p>
+            </td>
+          </tr>
+        </table>
+        <div style="margin-top:24px;">${button(o.orderUrl, "Acompanhar pedido")}</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 32px 0;">
+        <p style="margin:0 0 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.inkSoft};">Endereço de entrega</p>
+        ${addressBlock(o.shippingAddress)}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:24px 32px 32px;">
+        <p style="margin:0;font-size:13px;color:${COLORS.inkSoft};">
+          Quando chegar, conta pra gente. E se algo não der certo, é só
+          responder esse email.
+        </p>
+      </td>
+    </tr>`;
+
+  return { subject, html: shell({ preheader, body }) };
+}
+
 export function orderPaidEmail(o: OrderEmailData) {
   const firstName = o.customerName.split(" ")[0];
   const subject = `Pagamento confirmado · pedido #${o.orderNumber}`;
