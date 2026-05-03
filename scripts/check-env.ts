@@ -76,6 +76,15 @@ const OPTIONAL: Group[] = [
         hint: "DDI+DDD+numero, ex: 5511999999999"
       }
     ]
+  },
+  {
+    title: "Storage (Vercel Blob — biblioteca de mídia)",
+    vars: [
+      {
+        name: "BLOB_READ_WRITE_TOKEN",
+        hint: "auto-injetado quando Blob store criada no dashboard"
+      }
+    ]
   }
 ];
 

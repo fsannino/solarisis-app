@@ -37,6 +37,7 @@ model User {
   sessions           Session[]
   inventoryMovements InventoryMovement[]
   notifications      Notification[]
+  mediaAssets        MediaAsset[]
 }
 
 // Auth.js (NextAuth v5) — Prisma adapter standard models, ligados ao User (admin).
@@ -577,6 +578,25 @@ model ContentBlock {
   data      Json
   status    String   @default("active")
   updatedAt DateTime @updatedAt
+}
+
+// =====================================================
+// BIBLIOTECA DE MÍDIA (imagens reutilizáveis)
+// =====================================================
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  url         String   @unique // URL pública (Vercel Blob)
+  pathname    String?  // chave interna no storage, pra deletar
+  alt         String?
+  filename    String?  // nome original do arquivo
+  mimeType    String   // image/jpeg, image/png, image/webp
+  width       Int?
+  height      Int?
+  sizeBytes   Int
+  createdAt   DateTime @default(now())
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
 }
 
 // =====================================================

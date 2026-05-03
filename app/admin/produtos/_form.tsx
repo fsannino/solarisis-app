@@ -3,6 +3,10 @@
 import { useActionState } from "react";
 
 import type { ProductFormState } from "./_actions";
+import {
+  ProductImagesEditor,
+  type ProductImageEntry
+} from "./_product-images";
 
 type ProductFormValues = {
   name: string;
@@ -17,6 +21,7 @@ type ProductFormValues = {
   salePrice: string;
   costPrice: string;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+  images: ProductImageEntry[];
 };
 
 type Props = {
@@ -203,6 +208,10 @@ export function ProductForm({ defaultValues, action, submitLabel }: Props) {
             />
           </Field>
         </div>
+      </Section>
+
+      <Section title="Imagens">
+        <ProductImagesEditor initial={defaultValues?.images ?? []} />
       </Section>
 
       <Section title="Publicação">

@@ -29,7 +29,11 @@ export default async function EditProductPage({ params }: PageProps) {
       basePrice: true,
       salePrice: true,
       costPrice: true,
-      status: true
+      status: true,
+      images: {
+        orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
+        select: { url: true, alt: true, isPrimary: true }
+      }
     }
   });
 
@@ -82,7 +86,8 @@ export default async function EditProductPage({ params }: PageProps) {
             basePrice: String(product.basePrice),
             salePrice: product.salePrice != null ? String(product.salePrice) : "",
             costPrice: product.costPrice != null ? String(product.costPrice) : "",
-            status: product.status
+            status: product.status,
+            images: product.images
           }}
         />
       </div>
