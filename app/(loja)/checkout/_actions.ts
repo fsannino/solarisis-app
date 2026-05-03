@@ -10,6 +10,7 @@ import { getCart } from "@/lib/cart";
 import { nextOrderNumber } from "@/lib/order-number";
 import { FREE_SHIPPING_MIN, SHIPPING_FLAT } from "@/lib/checkout";
 import { createPreference, getBaseUrl } from "@/lib/mercadopago";
+import { calculateShipping } from "@/lib/melhor-envio";
 
 const onlyDigits = (v: unknown) =>
   typeof v === "string" ? v.replace(/\D/g, "") : v;
@@ -26,6 +27,10 @@ const checkoutSchema = z.object({
   cpf: z.preprocess(onlyDigits, z.string().length(11, "CPF deve ter 11 dígitos")),
   phone: z.preprocess(onlyDigits, z.string().min(10, "Telefone inválido").max(11)),
   paymentMethod: z.enum(["PIX", "CREDIT_CARD", "BOLETO"]),
+  shippingId: z
+    .string()
+    .min(1, "Selecione uma opção de frete")
+    .regex(/^(me:\d+|fallback:flat)$/, "Opção de frete inválida"),
   saveAddress: z
     .preprocess((v) => v === "on" || v === true || v === "true", z.boolean())
     .optional(),
@@ -116,7 +121,76 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
     });
   }
 
-  const shipping = subtotal >= FREE_SHIPPING_MIN ? 0 : SHIPPING_FLAT;
+  // Recalcula frete via Melhor Envio com os mesmos dados do carrinho.
+  // Nunca confiar no preço enviado pelo cliente. Se o cliente escolheu
+  // uma opção que não existe mais (preço mudou, serviço sumiu), erra
+  // pra ele revalidar.
+  const shippingItems = cart.items.map((it) => {
+    const dim = (it.variant.product.dimensions ?? null) as
+      | { length?: number; width?: number; height?: number }
+      | null;
+    const unit =
+      it.variant.priceOverride?.toNumber() ??
+      it.variant.product.salePrice?.toNumber() ??
+      it.variant.product.basePrice.toNumber();
+    return {
+      id: it.variantId,
+      quantity: it.quantity,
+      weight: it.variant.weight ?? it.variant.product.weight ?? null,
+      width: dim?.width ?? null,
+      height: dim?.height ?? null,
+      length: dim?.length ?? null,
+      insuranceValue: unit
+    };
+  });
+
+  const meOptions = await calculateShipping({
+    toCep: data.cep,
+    items: shippingItems
+  });
+
+  const qualifiesForFreeShipping = subtotal >= FREE_SHIPPING_MIN;
+
+  let shipping = 0;
+  let shippingMethodLabel: string | null = null;
+  let shippingCarrier: string | null = null;
+
+  if (data.shippingId.startsWith("me:")) {
+    if (!meOptions || meOptions.length === 0) {
+      return {
+        ok: false,
+        errors: { shippingId: "Frete indisponível. Recalcule o CEP." }
+      };
+    }
+    const serviceId = Number(data.shippingId.slice(3));
+    const chosen = meOptions.find((o) => o.serviceId === serviceId);
+    if (!chosen) {
+      return {
+        ok: false,
+        errors: {
+          shippingId:
+            "Opção de frete não está mais disponível. Recalcule o CEP."
+        }
+      };
+    }
+    shipping = qualifiesForFreeShipping ? 0 : chosen.price;
+    shippingMethodLabel = chosen.name;
+    shippingCarrier = chosen.company;
+  } else {
+    // fallback:flat — só permitido se ME não está habilitado.
+    if (meOptions && meOptions.length > 0) {
+      return {
+        ok: false,
+        errors: {
+          shippingId: "Selecione uma das opções calculadas pra esse CEP."
+        }
+      };
+    }
+    shipping = qualifiesForFreeShipping ? 0 : SHIPPING_FLAT;
+    shippingMethodLabel = "Envio padrão";
+    shippingCarrier = "Correios";
+  }
+
   const total = subtotal + shipping;
 
   const addressSnapshot = {
@@ -181,6 +255,8 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
         paymentMethod: data.paymentMethod,
         paymentStatus: "PENDING",
         status: "PENDING",
+        shippingMethod: shippingMethodLabel,
+        carrier: shippingCarrier,
         notes: data.notes || null,
         items: {
           create: orderItemsData
@@ -189,7 +265,11 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
           create: {
             type: "order_created",
             message: "Pedido criado, aguardando pagamento.",
-            metadata: { paymentMethod: data.paymentMethod }
+            metadata: {
+              paymentMethod: data.paymentMethod,
+              shipping: shippingMethodLabel,
+              carrier: shippingCarrier
+            }
           }
         }
       }

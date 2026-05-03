@@ -4,8 +4,9 @@ import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 import { createOrder, type CheckoutResult } from "./_actions";
+import type { ShippingResponse } from "@/app/api/shipping/calculate/route";
 
 type Defaults = {
   recipient?: string;
@@ -20,6 +21,14 @@ type Defaults = {
   state?: string;
 };
 
+type ShippingOption = {
+  id: string;
+  name: string;
+  company: string;
+  price: number;
+  deliveryDays: number;
+};
+
 const PAYMENT_OPTIONS: {
   value: "PIX" | "CREDIT_CARD" | "BOLETO";
   label: string;
@@ -32,7 +41,13 @@ const PAYMENT_OPTIONS: {
 
 const initialState: CheckoutResult = { ok: false, errors: {} };
 
-export function CheckoutForm({ defaults }: { defaults: Defaults }) {
+export function CheckoutForm({
+  defaults,
+  subtotal
+}: {
+  defaults: Defaults;
+  subtotal: number;
+}) {
   const [state, formAction, isPending] = useActionState(
     async (_prev: CheckoutResult, formData: FormData) =>
       await createOrder(formData),
@@ -46,6 +61,18 @@ export function CheckoutForm({ defaults }: { defaults: Defaults }) {
   const [state2, setState2] = useState(defaults.state ?? "");
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
+
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [shippingError, setShippingError] = useState<string | null>(null);
+  const [shippingId, setShippingId] = useState<string>("");
+  const [shippingSource, setShippingSource] = useState<
+    "melhor-envio" | "fallback" | null
+  >(null);
+
+  const selectedShipping = shippingOptions.find((o) => o.id === shippingId);
+  const shippingCost = selectedShipping?.price ?? 0;
+  const total = subtotal + shippingCost;
 
   async function lookupCep() {
     const digits = cep.replace(/\D/g, "");
@@ -67,6 +94,35 @@ export function CheckoutForm({ defaults }: { defaults: Defaults }) {
       setCepError("Não conseguimos buscar o CEP.");
     } finally {
       setCepLoading(false);
+    }
+    await fetchShipping(digits);
+  }
+
+  async function fetchShipping(cepDigits: string) {
+    setShippingLoading(true);
+    setShippingError(null);
+    setShippingOptions([]);
+    setShippingId("");
+    try {
+      const res = await fetch("/api/shipping/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cep: cepDigits })
+      });
+      const data = (await res.json()) as ShippingResponse;
+      if (!data.ok) {
+        setShippingError(data.error);
+        return;
+      }
+      setShippingOptions(data.options);
+      setShippingSource(data.source);
+      if (data.options.length > 0) {
+        setShippingId(data.options[0].id);
+      }
+    } catch {
+      setShippingError("Não conseguimos calcular o frete agora.");
+    } finally {
+      setShippingLoading(false);
     }
   }
 
@@ -186,6 +242,81 @@ export function CheckoutForm({ defaults }: { defaults: Defaults }) {
         </label>
       </fieldset>
 
+      <fieldset className="flex flex-col gap-3 border-t border-line pt-8">
+        <legend className="font-serif text-2xl italic text-ink">
+          Frete
+        </legend>
+
+        {shippingLoading && (
+          <p className="text-sm text-ink-soft">Calculando frete…</p>
+        )}
+        {shippingError && (
+          <p className="text-sm text-destructive">{shippingError}</p>
+        )}
+        {!shippingLoading &&
+          !shippingError &&
+          shippingOptions.length === 0 && (
+            <p className="text-sm text-ink-soft">
+              Informe o CEP de entrega pra calcularmos o frete.
+            </p>
+          )}
+
+        {shippingOptions.length > 0 && (
+          <>
+            <input type="hidden" name="shippingId" value={shippingId} />
+            <div className="flex flex-col gap-2">
+              {shippingOptions.map((opt) => {
+                const active = opt.id === shippingId;
+                return (
+                  <label
+                    key={opt.id}
+                    className={cn(
+                      "flex cursor-pointer items-start justify-between gap-3 rounded-lg border p-4 transition-colors",
+                      active
+                        ? "border-orange bg-orange-soft/40"
+                        : "border-line hover:border-orange"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="shippingChoice"
+                        value={opt.id}
+                        checked={active}
+                        onChange={() => setShippingId(opt.id)}
+                        className="mt-1 h-4 w-4 accent-orange"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-ink">
+                          {opt.name}
+                          {opt.company !== opt.name ? ` · ${opt.company}` : ""}
+                        </p>
+                        <p className="text-xs text-ink-soft">
+                          {opt.deliveryDays > 0
+                            ? `${opt.deliveryDays} dia${opt.deliveryDays === 1 ? "" : "s"} útil${opt.deliveryDays === 1 ? "" : "eis"}`
+                            : "prazo a confirmar"}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-medium text-ink">
+                      {opt.price === 0 ? "Grátis" : formatBRL(opt.price)}
+                    </p>
+                  </label>
+                );
+              })}
+            </div>
+            {shippingSource === "fallback" && (
+              <p className="text-xs text-ink-faint">
+                Cálculo em modo fallback (Melhor Envio não configurado).
+              </p>
+            )}
+          </>
+        )}
+        {errors.shippingId && (
+          <p className="text-xs text-destructive">{errors.shippingId}</p>
+        )}
+      </fieldset>
+
       <fieldset className="flex flex-col gap-4 border-t border-line pt-8">
         <legend className="font-serif text-2xl italic text-ink">
           Documento e contato
@@ -218,9 +349,8 @@ export function CheckoutForm({ defaults }: { defaults: Defaults }) {
           Pagamento
         </legend>
         <p className="text-sm text-ink-soft">
-          O processamento real (Mercado Pago) chega no próximo passo do
-          MVP. Aqui você seleciona o método e confirma o pedido em
-          <em> aguardando pagamento</em>.
+          Você é redirecionado pro Mercado Pago pra concluir o pagamento
+          com segurança.
         </p>
         <div className="flex flex-col gap-2">
           {PAYMENT_OPTIONS.map((opt, i) => (
@@ -265,8 +395,37 @@ export function CheckoutForm({ defaults }: { defaults: Defaults }) {
         />
       </fieldset>
 
-      <Button size="lg" type="submit" disabled={isPending}>
-        {isPending ? "Confirmando…" : "Confirmar pedido"}
+      <div className="flex flex-col gap-2 border-t border-line pt-6 text-sm">
+        <div className="flex justify-between text-ink-soft">
+          <span>Subtotal</span>
+          <span className="text-ink">{formatBRL(subtotal)}</span>
+        </div>
+        <div className="flex justify-between text-ink-soft">
+          <span>Frete</span>
+          <span className="text-ink">
+            {selectedShipping
+              ? selectedShipping.price === 0
+                ? "Grátis"
+                : formatBRL(selectedShipping.price)
+              : "—"}
+          </span>
+        </div>
+        <div className="mt-2 flex justify-between border-t border-line pt-3 font-serif text-xl italic">
+          <span>Total</span>
+          <span>{formatBRL(total)}</span>
+        </div>
+      </div>
+
+      <Button
+        size="lg"
+        type="submit"
+        disabled={isPending || !shippingId}
+      >
+        {isPending
+          ? "Confirmando…"
+          : !shippingId
+            ? "Selecione o frete"
+            : "Confirmar e pagar"}
       </Button>
       <p className="text-xs text-ink-faint">
         Ao confirmar, você concorda com nossos termos de uso e política de

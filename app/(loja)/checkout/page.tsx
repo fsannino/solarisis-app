@@ -6,8 +6,7 @@ import { prisma } from "@/lib/db";
 import { getCart, cartSubtotal, cartItemCount } from "@/lib/cart";
 import { requireCustomer } from "@/lib/auth-helpers";
 import { formatBRL } from "@/lib/utils";
-
-import { FREE_SHIPPING_MIN, SHIPPING_FLAT } from "@/lib/checkout";
+import { FREE_SHIPPING_MIN } from "@/lib/checkout";
 
 import { CheckoutForm } from "./checkout-form";
 
@@ -25,8 +24,6 @@ export default async function CheckoutPage() {
 
   const subtotal = cartSubtotal(cart);
   const count = cartItemCount(cart);
-  const shipping = subtotal >= FREE_SHIPPING_MIN ? 0 : SHIPPING_FLAT;
-  const total = subtotal + shipping;
 
   const customer = await prisma.customer.findUnique({
     where: { id: session.user.id },
@@ -47,6 +44,7 @@ export default async function CheckoutPage() {
 
       <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_380px]">
         <CheckoutForm
+          subtotal={subtotal}
           defaults={{
             recipient: addr?.recipient ?? customer?.name,
             cpf: customer?.cpf ?? undefined,
@@ -63,7 +61,7 @@ export default async function CheckoutPage() {
 
         <aside className="self-start rounded-2xl border border-line bg-surface p-6">
           <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Resumo · {count} {count === 1 ? "item" : "itens"}
+            Seus itens · {count} {count === 1 ? "item" : "itens"}
           </p>
 
           <ul className="mt-4 flex flex-col divide-y divide-line">
@@ -110,28 +108,14 @@ export default async function CheckoutPage() {
             })}
           </ul>
 
-          <div className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
-            <div className="flex justify-between text-ink-soft">
-              <span>Subtotal</span>
-              <span className="text-ink">{formatBRL(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-ink-soft">
-              <span>Frete</span>
-              <span className="text-ink">
-                {shipping === 0 ? "Grátis" : formatBRL(shipping)}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 flex justify-between border-t border-line pt-4 font-serif text-xl italic">
-            <span>Total</span>
-            <span>{formatBRL(total)}</span>
+          <div className="mt-4 flex justify-between border-t border-line pt-4 text-sm">
+            <span className="text-ink-soft">Subtotal</span>
+            <span className="text-ink">{formatBRL(subtotal)}</span>
           </div>
 
           <p className="mt-4 text-xs text-ink-faint">
-            Frete fixo de {formatBRL(SHIPPING_FLAT)} (grátis acima de{" "}
-            {formatBRL(FREE_SHIPPING_MIN)}). Cálculo via Melhor Envio chega
-            no próximo passo.
+            Frete grátis acima de {formatBRL(FREE_SHIPPING_MIN)}. Total final
+            (com frete) aparece no formulário ao lado.
           </p>
         </aside>
       </div>
