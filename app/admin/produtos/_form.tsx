@@ -155,7 +155,7 @@ export function ProductForm({ defaultValues, action, submitLabel }: Props) {
             />
           </Field>
 
-          <Field label="FPS" error={fieldErrors?.fps?.[0]}>
+          <Field label="FPU" error={fieldErrors?.fps?.[0]}>
             <input
               name="fps"
               type="number"

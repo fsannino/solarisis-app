@@ -16,7 +16,7 @@ const COLUMNS = [
     links: [
       { href: "/sobre", label: "Sobre" },
       { href: "/diario", label: "Diário" },
-      { href: "/tecnologia", label: "Tecnologia FPS" },
+      { href: "/tecnologia", label: "Tecnologia FPU" },
       { href: "/sustentabilidade", label: "Sustentabilidade" }
     ]
   },

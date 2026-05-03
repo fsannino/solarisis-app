@@ -22,9 +22,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Solarisis — Moda Solar FPS 50+",
+  title: "Solarisis — Moda Solar FPU 50+",
   description:
-    "Moda solar FPS 50+ pra o sol todo dia. Praia, trilha e cotidiano. Adulto e infantil."
+    "Moda solar FPU 50+ pra o sol todo dia. Praia, trilha e cotidiano. Adulto e infantil."
 };
 
 export default function RootLayout({

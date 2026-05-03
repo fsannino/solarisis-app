@@ -5,8 +5,6 @@ import type { Metadata } from "next";
 
 import { prisma } from "@/lib/db";
 import { requireCustomer } from "@/lib/auth-helpers";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -120,50 +118,65 @@ export default async function OrderConfirmationPage({
             }
           : null;
 
+  const tonePill =
+    status.tone === "muted"
+      ? "bg-ink/10 text-ink-soft"
+      : "bg-orange-soft text-orange";
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 md:px-8 md:py-20">
       {backBanner && (
         <div
           className={
             backBanner.tone === "ok"
-              ? "mb-6 rounded-md border border-orange/30 bg-orange-soft px-4 py-3 text-sm text-ink"
+              ? "mb-6 border border-orange/30 bg-orange-soft px-5 py-4 text-sm text-ink"
               : backBanner.tone === "error"
-                ? "mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-                : "mb-6 rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink-soft"
+                ? "mb-6 border border-destructive/40 bg-destructive/10 px-5 py-4 text-sm text-destructive"
+                : "mb-6 border border-line bg-surface px-5 py-4 text-sm text-ink-soft"
           }
           role="status"
         >
           {backBanner.msg}
         </div>
       )}
-      <div className="rounded-2xl border border-line bg-surface p-8 md:p-12">
-        <Badge variant={status.tone}>{status.title}</Badge>
-        <h1 className="mt-4 font-serif text-4xl italic text-ink md:text-5xl">
-          Obrigado, {session.user.name?.split(" ")[0]}.
+      <div className="border border-line bg-surface p-8 md:p-12">
+        <span
+          className={`inline-block rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] ${tonePill}`}
+        >
+          {status.title}
+        </span>
+        <h1 className="display mt-5 text-[clamp(36px,4.5vw,56px)]">
+          Obrigado,{" "}
+          <em className="not-italic italic text-orange">
+            {session.user.name?.split(" ")[0]}
+          </em>
+          .
         </h1>
-        <p className="mt-3 text-ink-soft">{status.body}</p>
-        <p className="mt-6 text-sm">
-          <span className="text-ink-soft">Número do pedido:</span>{" "}
-          <span className="font-medium text-ink">#{order.number}</span>
+        <p className="mt-4 text-[15px] leading-[1.55] text-ink-soft">
+          {status.body}
         </p>
-        <p className="text-sm">
-          <span className="text-ink-soft">Pagamento:</span>{" "}
-          <span className="text-ink">
-            {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod}
-          </span>
-        </p>
+        <div className="mt-7 grid grid-cols-2 gap-4 text-[14px]">
+          <div>
+            <p className="eyebrow text-[10px]">Número do pedido</p>
+            <p className="mt-1.5 font-mono text-ink">#{order.number}</p>
+          </div>
+          <div>
+            <p className="eyebrow text-[10px]">Pagamento</p>
+            <p className="mt-1.5 text-ink">
+              {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <section className="mt-8 rounded-2xl border border-line bg-surface p-6 md:p-8">
-        <p className="text-xs uppercase tracking-widest text-ink-soft">
-          Itens
-        </p>
+      <section className="mt-6 border border-line bg-surface p-6 md:p-8">
+        <p className="eyebrow">Itens</p>
         <ul className="mt-4 flex flex-col divide-y divide-line">
           {order.items.map((it) => {
             const image = it.variant.product.images[0];
             return (
               <li key={it.id} className="flex gap-4 py-4 first:pt-0">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-line">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-sand">
                   {image && (
                     <Image
                       src={image.url}
@@ -177,18 +190,18 @@ export default async function OrderConfirmationPage({
                 <div className="flex flex-1 flex-col text-sm">
                   <Link
                     href={`/produtos/${it.variant.product.slug}`}
-                    className="font-serif italic text-ink hover:text-orange"
+                    className="font-serif text-[16px] font-medium text-ink hover:text-orange"
                   >
                     {it.productName}
                   </Link>
                   {it.variantLabel && (
-                    <p className="text-xs text-ink-soft">{it.variantLabel}</p>
+                    <p className="eyebrow mt-1 text-[10px]">{it.variantLabel}</p>
                   )}
-                  <p className="mt-0.5 text-xs text-ink-faint">
+                  <p className="mt-1 text-xs text-ink-faint">
                     {it.quantity} × {formatBRL(it.unitPrice.toNumber())}
                   </p>
                 </div>
-                <p className="text-sm text-ink">
+                <p className="font-serif text-[15px] font-medium text-ink">
                   {formatBRL(it.totalPrice.toNumber())}
                 </p>
               </li>
@@ -220,18 +233,20 @@ export default async function OrderConfirmationPage({
             </div>
           )}
         </div>
-        <div className="mt-4 flex justify-between border-t border-line pt-4 font-serif text-xl italic">
-          <span>Total</span>
-          <span>{formatBRL(order.total.toNumber())}</span>
+        <div className="mt-4 flex items-baseline justify-between border-t border-line pt-5">
+          <span className="font-serif text-[16px] italic text-ink-soft">
+            Total
+          </span>
+          <span className="display text-[28px]">
+            {formatBRL(order.total.toNumber())}
+          </span>
         </div>
       </section>
 
       {order.nfeUrl && (
-        <section className="mt-8 rounded-2xl border border-line bg-surface p-6 md:p-8">
-          <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Nota fiscal
-          </p>
-          <p className="mt-2 text-sm text-ink">
+        <section className="mt-6 border border-line bg-surface p-6 md:p-8">
+          <p className="eyebrow">Nota fiscal</p>
+          <p className="mt-2 text-[14px] text-ink">
             {order.nfeNumber ? (
               <>
                 NF-e <strong>#{order.nfeNumber}</strong> · autorizada pela SEFAZ.
@@ -244,19 +259,17 @@ export default async function OrderConfirmationPage({
             href={order.nfeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-orange mt-2 inline-block text-sm underline-offset-4 hover:underline"
+            className="mt-3 inline-block text-[13px] font-semibold text-orange underline-offset-4 hover:underline"
           >
             Baixar PDF →
           </a>
         </section>
       )}
 
-      <section className="mt-8 grid gap-4 rounded-2xl border border-line bg-surface p-6 md:grid-cols-2 md:p-8">
+      <section className="mt-6 grid gap-6 border border-line bg-surface p-6 md:grid-cols-2 md:p-8">
         <div>
-          <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Entrega
-          </p>
-          <p className="mt-2 text-sm text-ink">
+          <p className="eyebrow">Entrega</p>
+          <p className="mt-3 text-[14px] leading-[1.55] text-ink">
             {ship.recipient}
             <br />
             {ship.street}, {ship.number}
@@ -268,10 +281,8 @@ export default async function OrderConfirmationPage({
           </p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Próximos passos
-          </p>
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="eyebrow">Próximos passos</p>
+          <p className="mt-3 text-[14px] leading-[1.55] text-ink-soft">
             {showPayCta
               ? "Conclua o pagamento pra a gente começar a separar seu pedido."
               : order.paymentStatus === "PAID"
@@ -283,18 +294,33 @@ export default async function OrderConfirmationPage({
 
       <div className="mt-8 flex flex-wrap gap-3">
         {showPayCta && (
-          <Button asChild size="lg">
-            <a href={initPoint!} rel="noopener noreferrer">
-              Pagar com Mercado Pago
-            </a>
-          </Button>
+          <a
+            href={initPoint!}
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 rounded-full bg-orange px-7 py-4 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-ink"
+          >
+            Pagar com Mercado Pago
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
         )}
-        <Button asChild variant={showPayCta ? "outline" : "default"}>
-          <Link href="/loja">Continuar comprando</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/conta">Minha conta</Link>
-        </Button>
+        <Link
+          href="/loja"
+          className={`inline-flex items-center gap-2.5 rounded-full px-6 py-3.5 text-sm font-semibold transition-all hover:-translate-y-0.5 ${
+            showPayCta
+              ? "border border-line-strong text-ink hover:border-ink hover:bg-ink hover:text-bone"
+              : "bg-ink text-bone hover:bg-orange"
+          }`}
+        >
+          Continuar comprando
+        </Link>
+        <Link
+          href="/conta"
+          className="inline-flex items-center gap-2.5 rounded-full border border-line-strong px-6 py-3.5 text-sm font-semibold text-ink transition-all hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-bone"
+        >
+          Minha conta
+        </Link>
       </div>
     </div>
   );

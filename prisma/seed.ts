@@ -41,7 +41,7 @@ const products: SeedProduct[] = [
     slug: "biquini-areia-fps50",
     name: "Biquíni Areia",
     description:
-      "Biquíni com proteção FPS 50+, tecido leve de secagem rápida e modelagem que se ajusta sem marcar. Pensado pra dia inteiro de praia.",
+      "Biquíni com proteção FPU 50+, tecido leve de secagem rápida e modelagem que se ajusta sem marcar. Pensado pra dia inteiro de praia.",
     category: ProductCategory.ADULTO,
     gender: ProductGender.FEMININO,
     type: "biquini",
@@ -65,7 +65,7 @@ const products: SeedProduct[] = [
     slug: "camiseta-praia-fps50",
     name: "Camiseta Praia",
     description:
-      "Manga curta com FPS 50+ pra quem não abre mão de cobrir os ombros. Caimento solto, gola redonda, tecido respirável.",
+      "Manga curta com FPU 50+ pra quem não abre mão de cobrir os ombros. Caimento solto, gola redonda, tecido respirável.",
     category: ProductCategory.ADULTO,
     gender: ProductGender.UNISSEX,
     type: "camiseta",
@@ -90,7 +90,7 @@ const products: SeedProduct[] = [
     slug: "macacao-infantil-fps50",
     name: "Macacão Infantil",
     description:
-      "Macacão de manga longa com FPS 50+, perfeito pra criança brincar no sol sem se preocupar. Zíper frontal, fácil de vestir.",
+      "Macacão de manga longa com FPU 50+, perfeito pra criança brincar no sol sem se preocupar. Zíper frontal, fácil de vestir.",
     category: ProductCategory.INFANTIL,
     gender: ProductGender.UNISSEX,
     type: "macacao",
@@ -114,7 +114,7 @@ const products: SeedProduct[] = [
     slug: "chapeu-veraneio",
     name: "Chapéu Veraneio",
     description:
-      "Aba larga, ajuste interno, palha sintética com FPS 50+. Pra você atravessar o verão de cabeça erguida — e protegida.",
+      "Aba larga, ajuste interno, palha sintética com FPU 50+. Pra você atravessar o verão de cabeça erguida — e protegida.",
     category: ProductCategory.ACESSORIO,
     gender: ProductGender.UNISSEX,
     type: "chapeu",
@@ -134,7 +134,7 @@ const products: SeedProduct[] = [
     slug: "legging-trilha-fps50",
     name: "Legging Trilha",
     description:
-      "Legging FPS 50+ com cintura alta e bolso lateral. Compressão suave, segura sem apertar. Trilha, yoga, vida.",
+      "Legging FPU 50+ com cintura alta e bolso lateral. Compressão suave, segura sem apertar. Trilha, yoga, vida.",
     category: ProductCategory.ADULTO,
     gender: ProductGender.FEMININO,
     type: "legging",
@@ -157,7 +157,7 @@ const products: SeedProduct[] = [
     slug: "manga-longa-surf",
     name: "Manga Longa Surf",
     description:
-      "Camiseta manga longa FPS 50+ pensada pro mar. Caimento ajustado pra não enrolar dentro d'água, secagem rápida.",
+      "Camiseta manga longa FPU 50+ pensada pro mar. Caimento ajustado pra não enrolar dentro d'água, secagem rápida.",
     category: ProductCategory.ADULTO,
     gender: ProductGender.MASCULINO,
     type: "camiseta",

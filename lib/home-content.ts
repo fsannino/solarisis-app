@@ -4,7 +4,7 @@
 export const BENEFITS = [
   {
     num: "01",
-    title: "Proteção FPS 50+",
+    title: "Proteção FPU 50+",
     body: "Bloqueio de até 98% dos raios UVA e UVB, certificado e duradouro mesmo após muitas lavagens.",
     accent: "orange" as const,
     icon: "sun" as const
