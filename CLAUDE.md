@@ -60,7 +60,7 @@ Loja virtual de moda solar (FPS 50+) brasileira, marca Solarisis. Modelo D2C (lo
 ## Não fazer
 
 - Não usar emoji em UI (a menos que explicitamente pedido)
-- Não inventar copy — perguntar ao Felipe
+- Não inventar copy — perguntar ao Fabiano
 - Não adicionar features fora do roadmap sem alinhamento
 - Não copiar HTML do protótipo literalmente — recriar com Tailwind + shadcn
 - Não usar gradientes coloridos genéricos
@@ -78,7 +78,7 @@ Loja virtual de moda solar (FPS 50+) brasileira, marca Solarisis. Modelo D2C (lo
 - Protótipo: <https://solarisis.vercel.app>
 - Repo do protótipo / handoff: <https://github.com/fsannino/solarisis>
 - Pasta de handoff: `design_handoff_solarisis/` no repo `fsannino/solarisis`
-- Cliente: Felipe Sannino (`@fsannino` no GitHub)
+- Cliente: Fabiano Sannino (`@fsannino` no GitHub)
 
 ## Roadmap resumido
 
