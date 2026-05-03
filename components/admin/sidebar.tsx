@@ -30,7 +30,7 @@ const NAV: NavGroup[] = [
       { label: "Produtos", href: "/admin/produtos" },
       { label: "Biblioteca de mídia", href: "/admin/midia" },
       { label: "Estoque", href: "/admin/estoque" },
-      { label: "Coleções" }
+      { label: "Coleções", href: "/admin/colecoes" }
     ]
   },
   {
