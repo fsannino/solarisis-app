@@ -11,6 +11,7 @@ import { nextOrderNumber } from "@/lib/order-number";
 import { FREE_SHIPPING_MIN, SHIPPING_FLAT } from "@/lib/checkout";
 import { createPreference, getBaseUrl } from "@/lib/mercadopago";
 import { calculateShipping } from "@/lib/melhor-envio";
+import { sendOrderCreatedEmail } from "@/lib/email/order-emails";
 
 const onlyDigits = (v: unknown) =>
   typeof v === "string" ? v.replace(/\D/g, "") : v;
@@ -336,6 +337,28 @@ export async function createOrder(formData: FormData): Promise<CheckoutResult> {
         metadata: { error: err instanceof Error ? err.message : String(err) }
       }
     });
+  }
+
+  // Email "pedido recebido". Roda depois do MP pra incluir o link de
+  // pagamento se tivermos init_point. Email é fire-and-forget — falhas
+  // não derrubam o checkout.
+  if (customer?.email) {
+    try {
+      const baseUrl = await getBaseUrl();
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: true }
+      });
+      if (fullOrder) {
+        await sendOrderCreatedEmail({
+          order: fullOrder,
+          customer: { name: customer.name, email: customer.email },
+          baseUrl
+        });
+      }
+    } catch (err) {
+      console.error("[email] erro ao enviar pedido_recebido:", err);
+    }
   }
 
   revalidatePath("/", "layout");
