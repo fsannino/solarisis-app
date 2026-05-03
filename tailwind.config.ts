@@ -10,20 +10,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Paleta da marca (estável — a fonte da verdade do design)
+        // Paleta da marca (fonte da verdade do design)
         orange: {
           DEFAULT: "#FF7A00",
           soft: "#FFE8D2"
         },
-        bg: "#FAF7F2",
+        green: {
+          DEFAULT: "#6FBF4A"
+        },
+        sand: "#F5E9DA",
+        bone: "#FAF7F2",
+        bg: "#FAF7F2", // alias legado
         surface: "#FFFFFF",
         line: {
-          DEFAULT: "#E8DFD0",
-          strong: "#D4C7B0"
+          DEFAULT: "rgba(26, 22, 20, 0.12)",
+          strong: "rgba(26, 22, 20, 0.22)"
         },
         ink: {
           DEFAULT: "#1A1614",
-          soft: "#6B5F54",
+          soft: "#4A3F38",
           faint: "#A89B8A"
         },
 
@@ -64,7 +69,12 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["var(--font-fraunces)", "Georgia", "serif"],
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"]
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"]
+      },
+      letterSpacing: {
+        tightest: "-0.03em",
+        editorial: "-0.02em"
       },
       spacing: {
         "4.5": "1.125rem",
@@ -92,11 +102,16 @@ const config: Config = {
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" }
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" }
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out"
+        "accordion-up": "accordion-up 0.2s ease-out",
+        marquee: "marquee 38s linear infinite"
       }
     }
   },
