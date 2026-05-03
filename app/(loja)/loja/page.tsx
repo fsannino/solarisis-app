@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Prisma, ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { ProductCard } from "@/components/loja/product-card";
+import { OrderSelect } from "@/components/loja/order-select";
 import { cn } from "@/lib/utils";
 
 type SearchParams = {
@@ -357,31 +358,7 @@ export default async function CatalogoPage({
         <div>
           <div className="mb-7 flex items-center justify-between">
             <p className="eyebrow">{products.length} peças</p>
-            <form action="/loja" className="flex items-center gap-2">
-              {linha !== "adulto" && <input type="hidden" name="linha" value={linha} />}
-              {sp.tipo && <input type="hidden" name="tipo" value={sp.tipo} />}
-              {cor && <input type="hidden" name="cor" value={cor} />}
-              {tamanho && <input type="hidden" name="tamanho" value={tamanho} />}
-              {colecao && <input type="hidden" name="colecao" value={colecao} />}
-              <select
-                name="ordem"
-                defaultValue={ordem}
-                onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                className="rounded-full border border-line-strong bg-transparent px-4 py-2 text-[13px] font-medium text-ink focus-visible:border-ink focus-visible:outline-none"
-              >
-                <option value="destaque">Em destaque</option>
-                <option value="menor-preco">Menor preço</option>
-                <option value="maior-preco">Maior preço</option>
-              </select>
-              <noscript>
-                <button
-                  type="submit"
-                  className="rounded-full bg-ink px-4 py-2 text-[12px] font-semibold text-bone"
-                >
-                  Aplicar
-                </button>
-              </noscript>
-            </form>
+            <OrderSelect defaultValue={ordem} />
           </div>
 
           {products.length === 0 ? (
