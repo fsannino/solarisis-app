@@ -1,6 +1,6 @@
 /**
  * Gera slug URL-safe a partir de um texto livre.
- *  "Camiseta Praia FPS50+" -> "camiseta-praia-fps50"
+ *  "Camiseta Praia FPU50+" -> "camiseta-praia-fps50"
  */
 export function slugify(input: string): string {
   return input

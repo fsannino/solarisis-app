@@ -73,7 +73,7 @@ export default async function CatalogoPage({
     orderBy,
     include: {
       images: { where: { isPrimary: true }, take: 1 },
-      variants: { select: { stock: true } }
+      variants: { select: { stock: true, color: true } }
     }
   });
 
@@ -81,28 +81,34 @@ export default async function CatalogoPage({
     ? await prisma.collection.findUnique({ where: { slug: colecao } })
     : null;
 
+  const eyebrowLabel = colecaoAtual
+    ? `Coleção ${colecaoAtual.name}`
+    : "Loja";
+  const titleText =
+    colecaoAtual?.name ??
+    (categoria === "INFANTIL"
+      ? "Mini"
+      : categoria === "ACESSORIO"
+        ? "Acessórios"
+        : categoria === "ADULTO"
+          ? "Adulto"
+          : "Catálogo completo");
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-20">
-      <div className="flex flex-col gap-3">
-        <p className="text-xs uppercase tracking-widest text-ink-soft">
-          {colecaoAtual ? `Coleção ${colecaoAtual.name}` : "Loja"}
-        </p>
-        <h1 className="font-serif text-4xl italic text-ink md:text-5xl">
-          {colecaoAtual?.name ??
-            (categoria === "INFANTIL"
-              ? "Infantil"
-              : categoria === "ACESSORIO"
-                ? "Acessórios"
-                : categoria === "ADULTO"
-                  ? "Adulto"
-                  : "Catálogo completo")}
+    <div className="mx-auto max-w-[1440px] px-4 py-12 md:px-8 md:py-16">
+      <header className="mb-12 flex flex-col gap-3">
+        <p className="eyebrow">{eyebrowLabel}</p>
+        <h1 className="display text-[clamp(40px,5.5vw,72px)]">
+          {titleText}
         </h1>
         {colecaoAtual?.description && (
-          <p className="max-w-xl text-ink-soft">{colecaoAtual.description}</p>
+          <p className="max-w-[640px] text-[16px] leading-[1.55] text-ink-soft">
+            {colecaoAtual.description}
+          </p>
         )}
-      </div>
+      </header>
 
-      <div className="mt-10 flex flex-col gap-4 border-y border-line py-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 border-y border-line py-5 md:flex-row md:items-center md:justify-between">
         <nav className="flex flex-wrap gap-2">
           {FILTROS_CATEGORIA.map((f) => {
             const active =
@@ -112,10 +118,10 @@ export default async function CatalogoPage({
                 key={f.value || "all"}
                 href={buildHref(sp, { categoria: f.value || undefined })}
                 className={cn(
-                  "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                  "rounded-full border px-4 py-2 text-sm transition-all",
                   active
-                    ? "border-orange bg-orange-soft text-ink"
-                    : "border-line-strong text-ink-soft hover:border-orange hover:text-ink"
+                    ? "border-ink bg-ink text-bone"
+                    : "border-line-strong text-ink-soft hover:-translate-y-0.5 hover:border-ink hover:text-ink"
                 )}
               >
                 {f.label}
@@ -124,15 +130,13 @@ export default async function CatalogoPage({
           })}
         </nav>
 
-        <form action="/loja" className="flex gap-2">
-          {categoria && (
-            <input type="hidden" name="categoria" value={categoria} />
-          )}
+        <form action="/loja" className="flex flex-wrap gap-2">
+          {categoria && <input type="hidden" name="categoria" value={categoria} />}
           {colecao && <input type="hidden" name="colecao" value={colecao} />}
           <select
             name="ordem"
             defaultValue={ordem}
-            className="h-9 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange"
+            className="h-10 rounded-full border border-line-strong bg-transparent px-4 text-sm text-ink focus-visible:border-ink focus-visible:outline-none"
           >
             {ORDEM.map((o) => (
               <option key={o.value} value={o.value}>
@@ -145,11 +149,11 @@ export default async function CatalogoPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Buscar"
-            className="h-9 w-40 rounded-md border border-line-strong bg-surface px-3 text-sm text-ink placeholder:text-ink-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange"
+            className="h-10 w-44 rounded-full border border-line-strong bg-transparent px-4 text-sm text-ink placeholder:text-ink-faint focus-visible:border-ink focus-visible:outline-none"
           />
           <button
             type="submit"
-            className="h-9 rounded-md bg-ink px-4 text-sm text-surface transition-colors hover:bg-ink-soft"
+            className="inline-flex h-10 items-center rounded-full bg-ink px-5 text-sm font-semibold text-bone transition-all hover:-translate-y-0.5 hover:bg-orange"
           >
             Aplicar
           </button>
@@ -157,18 +161,19 @@ export default async function CatalogoPage({
       </div>
 
       {products.length === 0 ? (
-        <div className="mt-20 text-center">
-          <p className="font-serif text-2xl italic text-ink">
-            Nada por aqui ainda.
-          </p>
-          <p className="mt-2 text-sm text-ink-soft">
+        <div className="mt-24 text-center">
+          <p className="display text-[32px]">Nada por aqui ainda.</p>
+          <p className="mt-3 text-[14px] text-ink-soft">
             Tente ajustar os filtros ou buscar por outro termo.
           </p>
         </div>
       ) : (
-        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-8 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-8 lg:grid-cols-4">
           {products.map((p) => {
             const totalStock = p.variants.reduce((s, v) => s + v.stock, 0);
+            const colorCount = new Set(
+              p.variants.map((v) => v.color).filter(Boolean)
+            ).size;
             return (
               <ProductCard
                 key={p.id}
@@ -181,7 +186,9 @@ export default async function CatalogoPage({
                   salePrice: p.salePrice?.toNumber() ?? null,
                   imageUrl: p.images[0]?.url,
                   imageAlt: p.images[0]?.alt ?? p.name,
-                  outOfStock: totalStock === 0
+                  outOfStock: totalStock === 0,
+                  colorCount,
+                  tag: p.tags[0] ?? null
                 }}
               />
             );

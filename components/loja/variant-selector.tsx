@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { addToCart } from "@/app/(loja)/_actions";
-import { Button } from "@/components/ui/button";
 import { cn, formatBRL } from "@/lib/utils";
 
 export type VariantOption = {
@@ -40,9 +39,7 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
 
   const selected = useMemo(() => {
     return (
-      variants.find(
-        (v) => v.color === color && v.size === size
-      ) ??
+      variants.find((v) => v.color === color && v.size === size) ??
       variants.find((v) => (color ? v.color === color : true)) ??
       null
     );
@@ -54,10 +51,11 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
     msg: string;
   } | null>(null);
 
-  const price =
-    selected?.priceOverride ?? salePrice ?? basePrice;
+  const price = selected?.priceOverride ?? salePrice ?? basePrice;
   const showStrikethrough =
-    salePrice != null && salePrice < basePrice && selected?.priceOverride == null;
+    salePrice != null &&
+    salePrice < basePrice &&
+    selected?.priceOverride == null;
   const outOfStock = !selected || selected.stock === 0;
 
   function handleAdd() {
@@ -77,11 +75,11 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       <div>
-        <p className="font-serif text-3xl text-ink">
+        <p className="display text-[40px] text-ink">
           {showStrikethrough && (
-            <span className="text-ink-faint line-through mr-2 text-2xl">
+            <span className="mr-2 text-[28px] text-ink-faint line-through">
               {formatBRL(basePrice)}
             </span>
           )}
@@ -89,15 +87,15 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
             {formatBRL(price)}
           </span>
         </p>
-        <p className="mt-1 text-xs text-ink-faint">
-          Em até 6x sem juros no cartão.
+        <p className="eyebrow mt-2 text-[10px]">
+          Em até 6x sem juros no cartão
         </p>
       </div>
 
       {colors.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Cor: <span className="text-ink">{color}</span>
+        <div className="flex flex-col gap-3">
+          <p className="eyebrow text-[10px]">
+            Cor · <span className="text-ink">{color}</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {colors.map((c) => {
@@ -108,14 +106,15 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
                   type="button"
                   onClick={() => {
                     setColor(c);
-                    const firstSize = variants.find((v) => v.color === c)?.size ?? null;
+                    const firstSize =
+                      variants.find((v) => v.color === c)?.size ?? null;
                     setSize(firstSize);
                   }}
                   className={cn(
-                    "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                    "rounded-full border px-4 py-2 text-sm transition-all",
                     active
-                      ? "border-orange bg-orange-soft text-ink"
-                      : "border-line-strong text-ink-soft hover:border-orange hover:text-ink"
+                      ? "border-ink bg-ink text-bone"
+                      : "border-line-strong text-ink-soft hover:-translate-y-0.5 hover:border-ink hover:text-ink"
                   )}
                 >
                   {c}
@@ -127,9 +126,9 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
       )}
 
       {sizesForColor.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs uppercase tracking-widest text-ink-soft">
-            Tamanho: <span className="text-ink">{size ?? "—"}</span>
+        <div className="flex flex-col gap-3">
+          <p className="eyebrow text-[10px]">
+            Tamanho · <span className="text-ink">{size ?? "—"}</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {sizesForColor.map((v) => {
@@ -142,11 +141,12 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
                   disabled={disabled}
                   onClick={() => setSize(v.size)}
                   className={cn(
-                    "min-w-[3rem] rounded-md border px-3 py-2 text-sm transition-colors",
+                    "min-w-[52px] rounded-full border px-4 py-2 text-sm font-medium transition-all",
                     active && !disabled
-                      ? "border-orange bg-orange-soft text-ink"
-                      : "border-line-strong text-ink hover:border-orange",
-                    disabled && "cursor-not-allowed text-ink-faint line-through opacity-60"
+                      ? "border-ink bg-ink text-bone"
+                      : "border-line-strong text-ink hover:-translate-y-0.5 hover:border-ink",
+                    disabled &&
+                      "cursor-not-allowed text-ink-faint line-through opacity-60 hover:translate-y-0 hover:border-line-strong"
                   )}
                 >
                   {v.size}
@@ -157,24 +157,38 @@ export function VariantSelector({ variants, basePrice, salePrice }: Props) {
         </div>
       )}
 
-      <Button
-        size="lg"
+      <button
         type="button"
         onClick={handleAdd}
         disabled={outOfStock || isPending}
+        className="inline-flex items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-4 text-sm font-semibold text-bone transition-all hover:-translate-y-0.5 hover:bg-orange disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-ink"
       >
         {outOfStock
           ? "Esgotado"
           : isPending
-            ? "Adicionando..."
-            : "Adicionar ao carrinho"}
-      </Button>
+            ? "Adicionando…"
+            : "Adicionar à sacola"}
+        {!outOfStock && !isPending && (
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        )}
+      </button>
 
       {feedback && (
         <p
           className={cn(
             "text-sm",
-            feedback.kind === "ok" ? "text-ink-soft" : "text-destructive"
+            feedback.kind === "ok" ? "text-green" : "text-destructive"
           )}
           role="status"
         >

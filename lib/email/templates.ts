@@ -78,7 +78,7 @@ function shell(opts: { preheader: string; body: string }) {
             <tr>
               <td style="padding:24px 32px 32px;border-top:1px solid ${COLORS.line};">
                 <p style="margin:0;font-size:12px;line-height:18px;color:${COLORS.inkFaint};">
-                  Solarisis · Moda solar FPS 50+ · Curitiba/PR<br />
+                  Solarisis · Moda solar FPU 50+ · Curitiba/PR<br />
                   Dúvidas? É só responder esse email.
                 </p>
               </td>

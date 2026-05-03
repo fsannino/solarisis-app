@@ -1,6 +1,6 @@
 # solarisis-app
 
-Loja virtual + painel admin da **Solarisis** — moda solar FPS 50+ brasileira.
+Loja virtual + painel admin da **Solarisis** — moda solar FPU 50+ brasileira.
 
 ## Status
 
