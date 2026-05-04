@@ -615,3 +615,13 @@ model AuditLog {
   userAgent String?
   createdAt DateTime @default(now())
 }
+
+// =====================================================
+// CONFIGURAÇÕES (key/value)
+// =====================================================
+
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}

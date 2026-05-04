@@ -43,7 +43,10 @@ const NAV: NavGroup[] = [
   },
   {
     title: "Sistema",
-    items: [{ label: "Notificações" }, { label: "Configurações" }]
+    items: [
+      { label: "Notificações" },
+      { label: "Configurações", href: "/admin/configuracoes" }
+    ]
   }
 ];
 
