@@ -20,7 +20,7 @@ const NAV: NavGroup[] = [
     items: [
       { label: "Pedidos", href: "/admin/pedidos" },
       { label: "Pagamentos", href: "/admin/pagamentos" },
-      { label: "Devoluções" },
+      { label: "Devoluções", href: "/admin/devolucoes" },
       { label: "Cupons", href: "/admin/cupons" }
     ]
   },
@@ -43,7 +43,10 @@ const NAV: NavGroup[] = [
   },
   {
     title: "Sistema",
-    items: [{ label: "Notificações" }, { label: "Configurações" }]
+    items: [
+      { label: "Notificações" },
+      { label: "Configurações", href: "/admin/configuracoes" }
+    ]
   }
 ];
 
